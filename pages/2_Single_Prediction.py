@@ -1,0 +1,959 @@
+"""
+Single Patient Prediction Page — Enter patient data manually and get a prediction.
+Redesigned as a modern hospital Clinical Decision Support System (CDSS).
+"""
+
+import os
+import streamlit as st
+import pandas as pd
+import datetime
+import io
+from utils.config import (
+    FEATURE_GROUPS,
+    NUMERICAL_FEATURES,
+    NUMERICAL_RANGES,
+    BINARY_OPTIONS,
+    MULTI_CATEGORICAL_FEATURES,
+    ALL_FEATURES,
+    setup_page,
+)
+from utils.prediction import predict_single
+from utils.explainability import explain_prediction, get_feature_icon, get_clinical_interpretation
+
+# Try imports with graceful fallbacks
+try:
+    import plotly.graph_objects as go
+    use_plotly = True
+except ImportError:
+    use_plotly = False
+
+try:
+    from fpdf import FPDF
+    has_fpdf = True
+except ImportError:
+    has_fpdf = False
+
+st.set_page_config(page_title="Prediksi Pasien — OxyPredict", page_icon="🫁", layout="wide")
+setup_page("Prediksi Pasien — OxyPredict")
+
+# Helper function to render HTML safely without markdown layout side-effects
+def st_html(html_str):
+    cleaned_lines = [line.lstrip() for line in html_str.splitlines()]
+    cleaned_html = "\n".join(cleaned_lines)
+    st.markdown(cleaned_html, unsafe_allow_html=True)
+
+# ─── Custom Layout Styling ───────────────────────────────────────────────────
+st_html("""
+<style>
+    /* Patient overview and layout styles */
+    .section-title-custom {
+        color: #0a2e52;
+        font-weight: 700;
+        font-size: 1.2rem;
+        margin-top: 1.5rem;
+        margin-bottom: 0.8rem;
+        border-left: 4px solid #2563eb;
+        padding-left: 0.6rem;
+    }
+    
+    /* Dynamic check list styling */
+    .clinical-indicator-list {
+        list-style-type: none;
+        padding-left: 0;
+        font-size: 0.88rem;
+        line-height: 1.8;
+    }
+</style>
+""")
+
+# ─── Header ──────────────────────────────────────────────────────────────────
+st_html("""
+<div style="
+    background: linear-gradient(135deg, #0a2e52 0%, #1a4a7a 50%, #2563eb 100%);
+    border-radius: 16px;
+    padding: 2rem 2.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 24px rgba(10, 46, 82, 0.18);
+">
+    <h1 style="margin: 0; color: white; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.3px;">🩺 CDSS Single Patient Prediction</h1>
+    <p style="margin: 0.3rem 0 0 0; color: #93c5fd; font-size: 0.95rem;">
+        Sistem Pendukung Keputusan Klinis untuk Prediksi Oksigen Terapi (Skripsi Demo)
+    </p>
+</div>
+""")
+
+# ─── Session State Initialization ────────────────────────────────────────────
+# Initialize session state for all inputs with their defaults if not present
+for group_name, features in FEATURE_GROUPS.items():
+    for feat in features:
+        key = f"input_{feat}"
+        if key not in st.session_state:
+            if feat in NUMERICAL_FEATURES:
+                min_val, max_val, default_val, step = NUMERICAL_RANGES[feat]
+                st.session_state[key] = default_val
+            elif feat in MULTI_CATEGORICAL_FEATURES:
+                options = MULTI_CATEGORICAL_FEATURES[feat]
+                st.session_state[key] = options[-1] # Default to 'Yes' or equivalent
+            elif feat in BINARY_OPTIONS:
+                options = BINARY_OPTIONS[feat]
+                st.session_state[key] = options[0] # Default to 'No' or 'Female'
+
+if "interacted_fields" not in st.session_state:
+    st.session_state.interacted_fields = set()
+
+def register_interaction(feat):
+    st.session_state.interacted_fields.add(feat)
+
+# ─── Placeholder Declarations ────────────────────────────────────────────────
+# Placeholders are rendered first, and updated dynamically at the end of the script
+header_placeholder = st.empty()
+tracker_placeholder = st.empty()
+alerts_placeholder = st.empty()
+
+# ─── Patient Input Form ──────────────────────────────────────────────────────
+st_html("<h3 class=\"section-title-custom\">📋 Patient Clinical Input Form</h3>")
+
+patient_data = {}
+tab_names = list(FEATURE_GROUPS.keys())
+tabs = st.tabs(tab_names)
+
+for tab, (group_name, features) in zip(tabs, FEATURE_GROUPS.items()):
+    with tab:
+        st.markdown("<br>", unsafe_allow_html=True)
+        n_cols = min(3, len(features))
+        cols = st.columns(n_cols)
+
+        for i, feat in enumerate(features):
+            col = cols[i % n_cols]
+            key = f"input_{feat}"
+
+            with col:
+                if feat in NUMERICAL_FEATURES:
+                    min_val, max_val, _, step = NUMERICAL_RANGES[feat]
+                    if isinstance(step, float):
+                        patient_data[feat] = st.number_input(
+                            feat,
+                            min_value=float(min_val),
+                            max_value=float(max_val),
+                            step=step,
+                            format="%.1f",
+                            key=key,
+                            on_change=register_interaction,
+                            args=(feat,)
+                        )
+                    else:
+                        patient_data[feat] = st.number_input(
+                            feat,
+                            min_value=int(min_val),
+                            max_value=int(max_val),
+                            step=step,
+                            key=key,
+                            on_change=register_interaction,
+                            args=(feat,)
+                        )
+                elif feat in MULTI_CATEGORICAL_FEATURES:
+                    options = MULTI_CATEGORICAL_FEATURES[feat]
+                    patient_data[feat] = st.selectbox(
+                        feat,
+                        options=options,
+                        key=key,
+                        on_change=register_interaction,
+                        args=(feat,)
+                    )
+                elif feat in BINARY_OPTIONS:
+                    options = BINARY_OPTIONS[feat]
+                    patient_data[feat] = st.selectbox(
+                        feat,
+                        options=options,
+                        key=key,
+                        on_change=register_interaction,
+                        args=(feat,)
+                    )
+
+st.markdown("")
+
+# ─── Calculate Reactive Header & Tracker Values ──────────────────────────────
+# Fetch session state values for reactive card calculations
+age_months = st.session_state.get("input_Age (months)", 24)
+gender = st.session_state.get("input_Gender", "Female")
+weight = st.session_state.get("input_Weight (Kg)", 10.0)
+height = st.session_state.get("input_Height (cm)", 75.0)
+sao2 = st.session_state.get("input_Oxygen saturation (SaO2) at admission", 96.0)
+temp = st.session_state.get("input_Axillary temperature (°C)", 37.0)
+rr = st.session_state.get("input_Respiratory rate", 30)
+wheezing = st.session_state.get("input_Wheezing", "No")
+nasal_flaring = st.session_state.get("input_Nasal flaring", "No")
+
+# Calculate BMI
+if height > 0:
+    bmi = weight / ((height / 100.0) ** 2)
+else:
+    bmi = 0.0
+
+# Calculate BMI Category & Badge
+if bmi < 18.5:
+    bmi_category = "Underweight"
+    bmi_color = "#dc2626" # Red
+    bmi_bg = "rgba(220, 38, 38, 0.1)"
+elif 18.5 <= bmi < 25:
+    bmi_category = "Normal"
+    bmi_color = "#16a34a" # Green
+    bmi_bg = "rgba(22, 163, 74, 0.1)"
+else:
+    bmi_category = "Overweight"
+    bmi_color = "#f59e0b" # Orange
+    bmi_bg = "rgba(245, 158, 11, 0.1)"
+
+# Calculate Form Completion Progress
+# A field is completed if it's interacted with OR if its value has changed from baseline default
+filled_count = 0
+for feat in ALL_FEATURES:
+    key_feat = f"input_{feat}"
+    current_val = st.session_state.get(key_feat)
+    
+    if feat in NUMERICAL_FEATURES:
+        _, _, default_val, _ = NUMERICAL_RANGES[feat]
+    elif feat in MULTI_CATEGORICAL_FEATURES:
+        default_val = MULTI_CATEGORICAL_FEATURES[feat][-1]
+    elif feat in BINARY_OPTIONS:
+        default_val = BINARY_OPTIONS[feat][0]
+        
+    if feat in st.session_state.interacted_fields or current_val != default_val:
+        filled_count += 1
+
+completion_pct = int((filled_count / 44.0) * 100)
+
+# Calculate Clinical Alerts
+is_tachypnea = False
+if age_months < 2:
+    is_tachypnea = rr >= 60
+elif 2 <= age_months < 12:
+    is_tachypnea = rr >= 50
+elif 12 <= age_months < 60:
+    is_tachypnea = rr >= 40
+else:
+    is_tachypnea = rr >= 30
+
+alerts = []
+if sao2 < 90:
+    alerts.append({
+        "type": "danger",
+        "title": "🚨 Severe Hypoxemia",
+        "desc": f"Oxygen saturation (SaO2) is dangerously low at <strong>{sao2:.1f}%</strong>. Immediate oxygenation is critical."
+    })
+if is_tachypnea:
+    alerts.append({
+        "type": "warning",
+        "title": "⚠️ Tachypnea Detected",
+        "desc": f"Respiratory rate is elevated at <strong>{rr} bpm</strong> for a patient of age {age_months} months. Indicative of breathing distress."
+    })
+if temp > 38.5:
+    alerts.append({
+        "type": "warning",
+        "title": "🌡️ High Fever",
+        "desc": f"Patient's axillary temperature is elevated at <strong>{temp:.1f}°C</strong>, indicating significant fever."
+    })
+if wheezing == "Yes":
+    alerts.append({
+        "type": "info",
+        "title": "🫁 Wheezing Present",
+        "desc": "Adventitious breath sound detected. Indicates airway obstruction or bronchial spasm."
+    })
+if nasal_flaring == "Yes":
+    alerts.append({
+        "type": "warning",
+        "title": "⚠️ Respiratory Distress Sign",
+        "desc": "Nasal flaring observed, indicating increased work of breathing and accessory muscle use."
+    })
+
+# ─── Render Reactive Header, Tracker & Alerts placeholders ──────────────────
+with header_placeholder.container():
+    st_html(f"""
+    <div style="
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);
+    ">
+        <h4 style="margin: 0 0 1rem 0; color: #0a2e52; font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+            👤 Patient Overview
+        </h4>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem;">
+            <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Age</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{age_months} months</div>
+            </div>
+            <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Gender</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{gender}</div>
+            </div>
+            <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Weight</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{weight:.1f} Kg</div>
+            </div>
+            <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Height</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{height:.1f} cm</div>
+            </div>
+            <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">BMI</div>
+                    <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{bmi:.2f}</div>
+                </div>
+                <div style="
+                    display: inline-block;
+                    align-self: flex-start;
+                    background-color: {bmi_bg};
+                    color: {bmi_color};
+                    border: 1px solid {bmi_color}30;
+                    font-size: 0.65rem;
+                    font-weight: 800;
+                    padding: 0.15rem 0.4rem;
+                    border-radius: 6px;
+                    margin-top: 0.3rem;
+                    text-transform: uppercase;
+                ">
+                    {bmi_category}
+                </div>
+            </div>
+        </div>
+    </div>
+    """)
+
+with tracker_placeholder.container():
+    if completion_pct < 40:
+        progress_color = "#dc2626" # Red
+        progress_bg = "#fef2f2"
+    elif 40 <= completion_pct < 70:
+        progress_color = "#f59e0b" # Orange
+        progress_bg = "#fffbeb"
+    else:
+        progress_color = "#16a34a" # Green
+        progress_bg = "#f0fdf4"
+
+    st_html(f"""
+    <div style="
+        background-color: {progress_bg};
+        border: 1px solid {progress_color}30;
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.01);
+    ">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: #0a2e52;">Form Completion Progress</span>
+            <span style="font-size: 0.85rem; font-weight: 700; color: {progress_color};">{completion_pct}% Complete</span>
+        </div>
+        <div style="background-color: #e2e8f0; border-radius: 6px; height: 10px; width: 100%; overflow: hidden;">
+            <div style="background-color: {progress_color}; height: 100%; width: {completion_pct}%; transition: width 0.3s ease;"></div>
+        </div>
+    </div>
+    """)
+
+with alerts_placeholder.container():
+    if alerts:
+        st_html("<div style='margin-bottom: 1.5rem;'>")
+        st_html("<h4 style='color: #0a2e52; font-size: 0.95rem; font-weight: 700; margin-bottom: 0.8rem;'>⚠️ Real-time Clinical Alerts</h4>")
+        for alert in alerts:
+            if alert["type"] == "danger":
+                bg = "#fdf2f2"
+                border = "#dc2626"
+                color = "#991b1b"
+            elif alert["type"] == "warning":
+                bg = "#fffbeb"
+                border = "#f59e0b"
+                color = "#92400e"
+            else: # info
+                bg = "#eff6ff"
+                border = "#2563eb"
+                color = "#1e40af"
+                
+            st_html(f"""
+            <div style="
+                background-color: {bg};
+                border-left: 4px solid {border};
+                border-radius: 8px;
+                padding: 0.8rem 1rem;
+                margin-bottom: 0.5rem;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            ">
+                <span style="font-size: 0.85rem; font-weight: 700; color: {border}; display: block; margin-bottom: 0.2rem;">{alert['title']}</span>
+                <span style="font-size: 0.8rem; color: {color}; line-height: 1.5;">{alert['desc']}</span>
+            </div>
+            """)
+        st_html("</div>")
+
+# ─── Predict Button ─────────────────────────────────────────────────────────
+col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
+with col_btn_c:
+    predict_clicked = st.button(
+        "🔮  Run CDSS Diagnostic Prediction",
+        use_container_width=True,
+        type="primary"
+    )
+
+# ─── PDF / HTML Exporter function ───────────────────────────────────────────
+def generate_html_report(age_months, gender, weight, height, bmi, bmi_category, label, prob_yes_pct, confidence_level, prob_pct, risk_level, risk_color, sao2, rr, is_tachypnea, temp, wheezing, nasal_flaring, now):
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="utf-8">
+    <title>OxyPredict Clinical Report</title>
+    <style>
+        body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.6; padding: 20px; }}
+        .report-card {{ border: 2px solid #0A2E52; border-radius: 12px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
+        .header {{ text-align: center; border-bottom: 2px solid #eff6ff; padding-bottom: 15px; margin-bottom: 20px; }}
+        .header h2 {{ margin: 0; color: #0A2E52; }}
+        .header p {{ margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem; }}
+        .section {{ margin-bottom: 20px; }}
+        .section-title {{ font-weight: bold; color: #0A2E52; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; }}
+        .label {{ color: #64748b; }}
+        .value {{ font-weight: bold; color: #0f172a; }}
+        .result-box {{ border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }}
+        .result-title {{ font-size: 1.1rem; font-weight: 800; }}
+        .result-val {{ font-size: 1.4rem; font-weight: 800; margin: 10px 0; }}
+        .disclaimer {{ font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; line-height: 1.4; }}
+    </style>
+    </head>
+    <body>
+    <div class="report-card">
+        <div class="header">
+            <h2>🫁 OxyPredict Clinical Report</h2>
+            <p>Clinical Decision Support System (CDSS) Prediction Report</p>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Patient Summary Overview</div>
+            <div class="grid">
+                <div class="label">Age:</div><div class="value">{age_months} months</div>
+                <div class="label">Gender:</div><div class="value">{gender}</div>
+                <div class="label">Weight / Height:</div><div class="value">{weight:.1f} Kg / {height:.1f} cm</div>
+                <div class="label">Calculated BMI:</div><div class="value">{bmi:.2f} ({bmi_category})</div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">Prediction Result</div>
+            <div class="result-box" style="background-color: {'#fdf2f2' if label == 'Yes' else '#f0fdf4'}; border-color: {'#fecaca' if label == 'Yes' else '#bbf7d0'};">
+                <div class="result-title" style="color: {'#991b1b' if label == 'Yes' else '#14532d'};">PREDICTED DECISION</div>
+                <div class="result-val" style="color: {'#dc2626' if label == 'Yes' else '#16a34a'};">
+                    {'⚠️ Need Oxygen Therapy' if label == 'Yes' else '✅ No Oxygen Therapy Needed'}
+                </div>
+                <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
+                    Probability of Needing Oxygen: <strong>{prob_yes_pct:.1f}%</strong><br>
+                    Confidence Level: <strong>{confidence_level} ({prob_pct:.1f}%)</strong><br>
+                    Clinical Risk Level: <strong style="color: {risk_color};">{risk_level}</strong>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section" style="margin-top: 15px;">
+            <div class="section-title">Key Clinical Indicators Checked</div>
+            <ul style="font-size: 0.85rem; padding-left: 20px; line-height: 1.6; color: #475569;">
+                <li>Oxygen Saturation (SaO2): <strong>{sao2:.1f}%</strong> ({'Low Saturation' if sao2 < 92 else 'Normal'})</li>
+                <li>Respiratory Rate: <strong>{rr} bpm</strong> ({'Tachypnea' if is_tachypnea else 'Normal'})</li>
+                <li>Axillary Temperature: <strong>{temp:.1f}°C</strong> ({'Fever' if temp > 37.5 else 'Normal'})</li>
+                <li>Wheezing: <strong>{wheezing}</strong></li>
+                <li>Nasal Flaring: <strong>{nasal_flaring}</strong></li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Report Metadata</div>
+            <div class="grid">
+                <div class="label">Date & Time Generated:</div><div class="value">{now}</div>
+                <div class="label">Model:</div><div class="value">Random Forest Classifier Pipeline</div>
+            </div>
+        </div>
+        
+        <div class="disclaimer">
+            <strong>Disclaimer:</strong> This clinical report is automatically generated by the OxyPredict CDSS for educational/thesis purposes. All clinical decisions must be confirmed and supervised by a qualified pediatrician or medical officer.
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+
+def generate_pdf_report(age_months, gender, weight, height, bmi, bmi_category, label, prob_yes_pct, confidence_level, prob_pct, risk_level, risk_color_rgb, sao2, rr, is_tachypnea, temp, wheezing, nasal_flaring, now):
+    if not has_fpdf:
+        return None
+    try:
+        pdf = FPDF()
+        pdf.add_page()
+        pdf.set_font("Helvetica", size=12)
+        
+        # Header Box
+        pdf.set_fill_color(10, 46, 82) # Navy blue
+        pdf.rect(0, 0, 210, 40, 'F')
+        
+        pdf.set_text_color(255, 255, 255)
+        pdf.set_font("Helvetica", style="B", size=18)
+        pdf.cell(0, 10, "OxyPredict - Clinical Report", ln=True, align="C")
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(0, 5, "Clinical Decision Support System (CDSS) for Pediatric Oxygen Therapy", ln=True, align="C")
+        pdf.ln(20)
+        
+        pdf.set_text_color(15, 23, 42) # Dark grey
+        pdf.set_font("Helvetica", style="B", size=14)
+        pdf.cell(0, 10, "1. Patient Summary Overview", ln=True)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(50, 8, "Age:", 0)
+        pdf.cell(0, 8, f"{age_months} months", ln=True)
+        pdf.cell(50, 8, "Gender:", 0)
+        pdf.cell(0, 8, f"{gender}", ln=True)
+        pdf.cell(50, 8, "Weight / Height:", 0)
+        pdf.cell(0, 8, f"{weight:.1f} Kg / {height:.1f} cm", ln=True)
+        pdf.cell(50, 8, "Calculated BMI:", 0)
+        pdf.cell(0, 8, f"{bmi:.2f} ({bmi_category})", ln=True)
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", style="B", size=14)
+        pdf.cell(0, 10, "2. Prediction Details", ln=True)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", style="B", size=12)
+        pred_label = "Need Oxygen Therapy" if label == "Yes" else "No Oxygen Therapy Needed"
+        pdf.cell(50, 8, "Predicted Outcome:", 0)
+        pdf.cell(0, 8, f"{pred_label}", ln=True)
+        
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(50, 8, "Probability of Need:", 0)
+        pdf.cell(0, 8, f"{prob_yes_pct:.1f}%", ln=True)
+        pdf.cell(50, 8, "Confidence Level:", 0)
+        pdf.cell(0, 8, f"{confidence_level} ({prob_pct:.1f}%)", ln=True)
+        pdf.cell(50, 8, "Clinical Risk Level:", 0)
+        
+        # Color code risk text in PDF
+        pdf.set_text_color(risk_color_rgb[0], risk_color_rgb[1], risk_color_rgb[2])
+        pdf.set_font("Helvetica", style="B", size=10)
+        pdf.cell(0, 8, f"{risk_level}", ln=True)
+        
+        pdf.set_text_color(15, 23, 42)
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", style="B", size=14)
+        pdf.cell(0, 10, "3. Key Clinical Indicators Checked", ln=True)
+        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
+        pdf.ln(5)
+        
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(80, 8, f"Oxygen Saturation (SaO2): {sao2:.1f}%", 0)
+        pdf.cell(0, 8, "[Low Saturation]" if sao2 < 92 else "[Normal Saturation]", ln=True)
+        pdf.cell(80, 8, f"Respiratory Rate: {rr} bpm", 0)
+        pdf.cell(0, 8, "[Tachypnea]" if is_tachypnea else "[Normal Rate]", ln=True)
+        pdf.cell(80, 8, f"Axillary Temperature: {temp:.1f} C", 0)
+        pdf.cell(0, 8, "[Fever]" if temp > 37.5 else "[Normal Temperature]", ln=True)
+        pdf.cell(80, 8, f"Wheezing presence: {wheezing}", ln=True)
+        pdf.cell(80, 8, f"Nasal flaring presence: {nasal_flaring}", ln=True)
+        pdf.ln(10)
+        
+        pdf.set_font("Helvetica", style="B", size=10)
+        pdf.cell(50, 6, "Report Timestamp:", 0)
+        pdf.set_font("Helvetica", size=10)
+        pdf.cell(0, 6, f"{now}", ln=True)
+        pdf.ln(15)
+        
+        # Disclaimer
+        pdf.set_font("Helvetica", style="I", size=8)
+        pdf.set_text_color(148, 163, 184)
+        pdf.multi_cell(0, 4, "Disclaimer: This clinical report is automatically generated by the OxyPredict CDSS for academic and research evaluation purposes. Final medical assessment and decisions remain the sole responsibility of a qualified medical professional.", 0, 'C')
+        
+        pdf_bytes = pdf.output()
+        if isinstance(pdf_bytes, str):
+            pdf_bytes = pdf_bytes.encode('latin1')
+        return bytes(pdf_bytes)
+    except Exception as pdf_err:
+        st.error(f"Error during PDF generation: {pdf_err}")
+        return None
+
+# ─── Prediction Result Rendering ─────────────────────────────────────────────
+if predict_clicked:
+    with st.spinner("Processing CDSS Diagnostic Prediction..."):
+        try:
+            label, prob_yes = predict_single(patient_data)
+            prob_yes_pct = prob_yes * 100
+            
+            # Confidence Interpretation calculation
+            # Winning class probability determines model confidence
+            if label == "Yes":
+                prob_pct = prob_yes * 100
+            else:
+                prob_pct = (1 - prob_yes) * 100
+                
+            if prob_pct > 85:
+                confidence_level = "High Confidence"
+            elif 70 <= prob_pct <= 85:
+                confidence_level = "Moderate Confidence"
+            else:
+                confidence_level = "Low Confidence"
+
+            # Clinical Risk Badge calculation
+            if prob_yes_pct >= 85:
+                risk_level = "High Risk"
+                risk_badge = "🔴 High Risk"
+                risk_color = "#DC2626"
+                risk_color_rgb = (220, 38, 38)
+                risk_bg = "#fdf2f2"
+                risk_border = "#fecaca"
+            elif 60 <= prob_yes_pct < 85:
+                risk_level = "Moderate Risk"
+                risk_badge = "🟠 Moderate Risk"
+                risk_color = "#F59E0B"
+                risk_color_rgb = (245, 158, 11)
+                risk_bg = "#fffbeb"
+                risk_border = "#fef3c7"
+            else:
+                risk_level = "Low Risk"
+                risk_badge = "🟢 Low Risk"
+                risk_color = "#16A34A"
+                risk_color_rgb = (22, 163, 74)
+                risk_bg = "#f0fdf4"
+                risk_border = "#bbf7d0"
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            st_html("<h3 class=\"section-title-custom\">🔮 Prediction Analysis & Summary</h3>")
+            
+            col_res_left, col_res_right = st.columns([3, 2])
+            
+            with col_res_left:
+                # Diagnostic Summary Card
+                st_html(f"""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+                    margin-bottom: 1.5rem;
+                ">
+                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">CDSS DIAGNOSTIC ANALYSIS</div>
+                    <div style="font-size: 1.4rem; font-weight: 800; color: #0A2E52; margin: 0.5rem 0;">Prediction Summary</div>
+                    <div style="border-top: 1px solid #f1f5f9; padding-top: 0.8rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 0.88rem;">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #64748b;">Prediction Outcome:</span>
+                            <span style="font-weight: 700; color: {risk_color};">
+                                {'⚠️ Need Oxygen Therapy' if label == 'Yes' else '✅ No Oxygen Therapy Needed'}
+                            </span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #64748b;">Probability:</span>
+                            <span style="font-weight: 700; color: #0f172a;">{prob_yes_pct:.1f}%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: #64748b;">Confidence Level:</span>
+                            <span style="font-weight: 700; color: #0f172a;">{confidence_level} ({prob_pct:.1f}%)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: #64748b;">Clinical Risk Level:</span>
+                            <span style="
+                                background-color: {risk_bg};
+                                color: {risk_color};
+                                border: 1px solid {risk_color}30;
+                                font-size: 0.75rem;
+                                font-weight: 800;
+                                padding: 0.2rem 0.6rem;
+                                border-radius: 6px;
+                                text-transform: uppercase;
+                            ">
+                                {risk_badge}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                """)
+
+                # Key Clinical Factors Checklist Card
+                indicator_html = ""
+                if sao2 < 92:
+                    indicator_html += f"<li style='color: #dc2626; margin-bottom: 0.4rem;'>🔴 <strong>Low Oxygen Saturation:</strong> SaO2 is below 92% ({sao2:.1f}%)</li>"
+                else:
+                    indicator_html += f"<li style='color: #64748b; margin-bottom: 0.4rem;'>✓ Normal oxygen saturation ({sao2:.1f}%)</li>"
+                
+                if is_tachypnea:
+                    indicator_html += f"<li style='color: #f59e0b; margin-bottom: 0.4rem;'>🟠 <strong>Elevated Respiratory Rate:</strong> Tachypnea detected ({rr} bpm)</li>"
+                else:
+                    indicator_html += f"<li style='color: #64748b; margin-bottom: 0.4rem;'>✓ Normal respiratory rate ({rr} bpm)</li>"
+                    
+                if temp > 37.5:
+                    indicator_html += f"<li style='color: #f59e0b; margin-bottom: 0.4rem;'>🟠 <strong>Fever Present:</strong> Temperature is {temp:.1f}°C</li>"
+                else:
+                    indicator_html += f"<li style='color: #64748b; margin-bottom: 0.4rem;'>✓ Normal body temperature ({temp:.1f}°C)</li>"
+                    
+                if wheezing == "Yes":
+                    indicator_html += "<li style='color: #2563eb; margin-bottom: 0.4rem;'>🔵 <strong>Wheezing Present:</strong> Adventitious bronchial sounds</li>"
+                else:
+                    indicator_html += "<li style='color: #64748b; margin-bottom: 0.4rem;'>✓ No wheezing detected</li>"
+                    
+                if nasal_flaring == "Yes":
+                    indicator_html += "<li style='color: #dc2626; margin-bottom: 0.4rem;'>🔴 <strong>Nasal Flaring Present:</strong> Sign of respiratory distress</li>"
+                else:
+                    indicator_html += "<li style='color: #64748b; margin-bottom: 0.4rem;'>✓ No nasal flaring observed</li>"
+
+                st_html(f"""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+                    margin-bottom: 1.5rem;
+                ">
+                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">PATIENT-SPECIFIC FINDINGS</div>
+                    <div style="font-size: 1.1rem; font-weight: 700; color: #0A2E52; margin: 0.4rem 0 0.8rem 0;">Key Clinical Indicators</div>
+                    <ul class="clinical-indicator-list">
+                        {indicator_html}
+                    </ul>
+                </div>
+                """)
+
+                # PDF/HTML Export Report Trigger
+                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                
+                # HTML Report code
+                html_report_content = generate_html_report(
+                    age_months, gender, weight, height, bmi, bmi_category,
+                    label, prob_yes_pct, confidence_level, prob_pct,
+                    risk_level, risk_color, sao2, rr, is_tachypnea, temp,
+                    wheezing, nasal_flaring, now_str
+                )
+                
+                # Try generating PDF Report
+                pdf_report_bytes = None
+                if has_fpdf:
+                    pdf_report_bytes = generate_pdf_report(
+                        age_months, gender, weight, height, bmi, bmi_category,
+                        label, prob_yes_pct, confidence_level, prob_pct,
+                        risk_level, risk_color_rgb, sao2, rr, is_tachypnea, temp,
+                        wheezing, nasal_flaring, now_str
+                    )
+                
+                # Columns for Export buttons
+                col_exp_1, col_exp_2 = st.columns(2)
+                with col_exp_1:
+                    if has_fpdf and pdf_report_bytes:
+                        st.download_button(
+                            label="📄 Download PDF Clinical Report",
+                            data=pdf_report_bytes,
+                            file_name=f"OxyPredict_Clinical_Report_{datetime.date.today()}.pdf",
+                            mime="application/pdf",
+                            use_container_width=True
+                        )
+                    else:
+                        st.download_button(
+                            label="📄 Download HTML Clinical Report",
+                            data=html_report_content,
+                            file_name=f"OxyPredict_Clinical_Report_{datetime.date.today()}.html",
+                            mime="text/html",
+                            use_container_width=True
+                        )
+                with col_exp_2:
+                    if not has_fpdf:
+                        st.info("ℹ️ Run `pip install fpdf2` to enable native PDF report exports.")
+                    
+            with col_res_right:
+                # Gauge Chart rendering
+                st_html("""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    padding: 1.5rem;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+                    margin-bottom: 1.5rem;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    min-height: 250px;
+                ">
+                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; text-align: left; margin-bottom: 1rem;">OXYGEN NEED PROBABILITY</div>
+                """)
+
+                if use_plotly:
+                    fig = go.Figure(go.Indicator(
+                        mode="gauge+number",
+                        value=prob_yes_pct,
+                        domain={'x': [0, 1], 'y': [0, 1]},
+                        gauge={
+                            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#0a2e52"},
+                            'bar': {'color': risk_color},
+                            'bgcolor': "white",
+                            'borderwidth': 1.5,
+                            'bordercolor': "#cbd5e1",
+                            'steps': [
+                                {'range': [0, 60], 'color': 'rgba(22, 163, 74, 0.08)'},
+                                {'range': [60, 85], 'color': 'rgba(245, 158, 11, 0.08)'},
+                                {'range': [85, 100], 'color': 'rgba(220, 38, 38, 0.08)'}
+                            ],
+                            'threshold': {
+                                'line': {'color': risk_color, 'width': 3},
+                                'thickness': 0.75,
+                                'value': prob_yes_pct
+                            }
+                        }
+                    ))
+                    fig.update_layout(
+                        height=160,
+                        margin=dict(t=10, b=10, l=15, r=15),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        font={'color': "#0a2e52", 'family': "Inter"}
+                    )
+                    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+                else:
+                    # SVG Gauge Fallback
+                    st_html(f"""
+                        <svg viewBox="0 0 120 70" width="100%" height="auto" style="max-width: 170px; display: block; margin: 0 auto;">
+                            <!-- Background Arc -->
+                            <path d="M 20 60 A 40 40 0 0 1 100 60" fill="none" stroke="#e2e8f0" stroke-width="7" stroke-linecap="round" />
+                            
+                            <!-- Colored Progress Arc -->
+                            <path d="M 20 60 A 40 40 0 0 1 100 60" fill="none" stroke="{risk_color}" stroke-width="7" stroke-linecap="round" 
+                                  stroke-dasharray="125.66" stroke-dashoffset="{125.66 * (1 - prob_yes_pct/100)}" />
+                                  
+                            <!-- Probability Text -->
+                            <text x="60" y="52" fill="#0A2E52" font-size="14" text-anchor="middle" font-family="sans-serif" font-weight="800">{prob_yes_pct:.1f}%</text>
+                            <text x="60" y="64" fill="#64748b" font-size="7" text-anchor="middle" font-family="sans-serif" font-weight="600">{risk_level.upper()}</text>
+                        </svg>
+                    """)
+                st_html("</div>")
+
+                # Recommendation panel
+                if label == "Yes":
+                    rec_bg = "#fdf2f2"
+                    rec_border = "#dc2626"
+                    rec_color = "#991b1b"
+                    rec_text = "Patient should receive further respiratory assessment and oxygen monitoring."
+                else:
+                    rec_bg = "#f0fdf4"
+                    rec_border = "#16a34a"
+                    rec_color = "#14532d"
+                    rec_text = "Patient does not require oxygen therapy at this time. Maintain standard monitoring and reassessment."
+
+                st_html(f"""
+                <div style="
+                    background-color: {rec_bg};
+                    border-left: 5px solid {rec_border};
+                    border-radius: 12px;
+                    padding: 1.2rem;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.02);
+                ">
+                    <h5 style="margin: 0 0 0.4rem 0; color: #0a2e52; font-weight: 700; font-size: 0.92rem;">Suggested Considerations</h5>
+                    <p style="margin: 0; color: {rec_color}; font-size: 0.82rem; line-height: 1.6; font-weight: 500;">
+                        {rec_text}
+                    </p>
+                </div>
+                """)
+
+            st.markdown("---")
+
+            # Explainable AI Section: Top Contributing Factors (5 Cards)
+            st_html("<h3 class=\"section-title-custom\">🔍 Key Clinical Factors (XAI Analysis)</h3>")
+            st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Top 5 clinical factors influencing the Random Forest model's output for this patient:</p>")
+            
+            with st.spinner("Analyzing clinical decision path..."):
+                try:
+                    explanations = explain_prediction(patient_data)
+                    top_5 = explanations[:5]
+                except Exception as ex_err:
+                    st.error(f"Failed to trace decision contributions: {ex_err}")
+                    top_5 = []
+
+            if top_5:
+                cols_xai = st.columns(5)
+                for idx, factor in enumerate(top_5):
+                    feat_name = factor["feature"]
+                    val = factor["value"]
+                    impact = factor["impact"]
+                    icon = get_feature_icon(feat_name)
+
+                    if impact > 0:
+                        impact_text = f"+{impact*100:.1f}% (Needs O₂)"
+                        impact_color = "#dc2626"  # Red
+                        bg_color = "#fdf2f2"
+                        border_color = "#fecaca"
+                    else:
+                        impact_text = f"{impact*100:.1f}% (No O₂)"
+                        impact_color = "#059669"  # Green
+                        bg_color = "#f0fdf4"
+                        border_color = "#bbf7d0"
+
+                    with cols_xai[idx]:
+                        st_html(f"""
+                        <div style="
+                            background-color: {bg_color};
+                            border: 1px solid {border_color};
+                            border-radius: 12px;
+                            padding: 0.8rem;
+                            min-height: 140px;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+                        ">
+                            <div>
+                                <div style="font-size: 1.2rem; margin-bottom: 0.2rem;">{icon}</div>
+                                <div style="font-size: 0.76rem; font-weight: 700; color: #1e3a5f; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                    {feat_name}
+                                </div>
+                            </div>
+                            <div style="margin-top: 0.5rem;">
+                                <div style="font-size: 0.72rem; color: #475569;">Value: <strong>{val}</strong></div>
+                                <div style="font-size: 0.72rem; font-weight: 700; color: {impact_color}; margin-top: 0.1rem;">
+                                    Impact: {impact_text}
+                                </div>
+                            </div>
+                        </div>
+                        """)
+
+                st.markdown("")
+
+                # Clinical Interpretation Box
+                interpretation_text = get_clinical_interpretation(label, top_5)
+                st_html(f"""
+                <div style="
+                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                    border: 1px solid #bfdbfe;
+                    border-radius: 12px;
+                    padding: 1rem 1.3rem;
+                    margin-top: 0.5rem;
+                    margin-bottom: 1.2rem;
+                    box-shadow: 0 2px 8px rgba(10, 46, 82, 0.05);
+                ">
+                    <h4 style="margin: 0 0 0.4rem 0; color: #0a2e52; font-weight: 700; font-size: 0.9rem;">
+                        💡 Clinical Interpretation
+                    </h4>
+                    <p style="margin: 0; color: #1e293b; font-size: 0.82rem; line-height: 1.6;">
+                        {interpretation_text}
+                    </p>
+                </div>
+                """)
+
+            # CDSS Disclaimer block
+            st_html("""
+            <div style="
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 12px;
+                padding: 0.9rem 1.2rem;
+                display: flex;
+                align-items: flex-start;
+                gap: 0.8rem;
+                margin-top: 1.5rem;
+            ">
+                <div style="font-size: 1.2rem; color: #64748b; flex-shrink: 0; margin-top: 0.1rem;">ℹ️</div>
+                <p style="margin: 0; color: #475569; font-size: 0.78rem; line-height: 1.6;">
+                    <strong>Disclaimer:</strong> This recommendation is generated by a machine learning model and should be used only as a Clinical Decision Support System (CDSS). Final medical decisions remain the responsibility of qualified healthcare professionals.
+                </p>
+            </div>
+            """)
+
+        except Exception as e:
+            st.error(f"❌ Terjadi kesalahan saat melakukan prediksi: {str(e)}")
