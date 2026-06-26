@@ -18,7 +18,6 @@ from utils.config import (
     setup_page,
 )
 from utils.prediction import predict_single
-from utils.explainability import explain_prediction, get_feature_icon, get_clinical_interpretation
 
 # Try imports with graceful fallbacks
 try:
@@ -854,60 +853,284 @@ if predict_clicked:
 
             st.markdown("---")
 
-            # Explainable AI Section: Top Contributing Factors (5 Cards)
-            st_html("<h3 class=\"section-title-custom\">🔍 Key Clinical Factors (XAI Analysis)</h3>")
-            st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Top 5 clinical factors influencing the Random Forest model's output for this patient:</p>")
-            
-            with st.spinner("Analyzing clinical decision path..."):
+            # =================================================================
+            # SHAP-Based AI Prediction Explanation
+            # =================================================================
+            from utils.shap_utils import (
+                compute_shap_for_patient,
+                generate_shap_clinical_interpretation,
+                get_shap_feature_icon,
+            )
+
+            # ── Section 1: Header ─────────────────────────────────────────
+            st_html("""
+            <div style="
+                background: linear-gradient(135deg, #0a2e52 0%, #153e75 50%, #1e40af 100%);
+                border-radius: 16px;
+                padding: 1.8rem 2rem;
+                margin-bottom: 1.5rem;
+                box-shadow: 0 8px 30px rgba(10, 46, 82, 0.18);
+            ">
+                <h2 style="margin: 0; color: #ffffff; font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 0.5rem;">
+                    🧠 AI Prediction Explanation
+                </h2>
+                <p style="margin: 0.4rem 0 0 0; color: #93c5fd; font-size: 0.85rem; line-height: 1.5;">
+                    This explanation is generated using <strong style="color: #dbeafe;">SHAP</strong>
+                    (SHapley Additive exPlanations) to improve transparency of the machine learning prediction.
+                </p>
+            </div>
+            """)
+
+            # ── Section 2: Compute SHAP ───────────────────────────────────
+            with st.spinner("Computing SHAP values for this patient (TreeExplainer)..."):
                 try:
-                    explanations = explain_prediction(patient_data)
-                    top_5 = explanations[:5]
-                except Exception as ex_err:
-                    st.error(f"Failed to trace decision contributions: {ex_err}")
-                    top_5 = []
+                    shap_result = compute_shap_for_patient(patient_data)
+                    shap_values_list = shap_result["shap_values"]
+                    shap_base = shap_result["base_value"]
+                    shap_prob = shap_result["predicted_prob"]
+                    shap_ok = True
+                except Exception as shap_err:
+                    st.error(f"⚠️ Could not compute SHAP values: {shap_err}")
+                    shap_ok = False
 
-            if top_5:
-                cols_xai = st.columns(5)
-                for idx, factor in enumerate(top_5):
-                    feat_name = factor["feature"]
-                    val = factor["value"]
-                    impact = factor["impact"]
-                    icon = get_feature_icon(feat_name)
+            if shap_ok:
+                top_10 = shap_values_list[:10]
+                positive_factors = [s for s in shap_values_list if s["shap_value"] > 0.005]
+                negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
 
-                    if impact > 0:
-                        impact_text = f"+{impact*100:.1f}% (Needs O₂)"
-                        impact_color = "#dc2626"  # Red
-                        bg_color = "#fdf2f2"
-                        border_color = "#fecaca"
+                # ── Section 3: Top 10 Features Table ──────────────────────
+                st_html("<h3 class=\"section-title-custom\">📊 Top 10 Contributing Features</h3>")
+                st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Features ranked by absolute SHAP value — showing the strongest influences on this prediction:</p>")
+
+                table_rows = ""
+                for i, sv in enumerate(top_10):
+                    shap_val = sv["shap_value"]
+                    if shap_val > 0:
+                        impact_label = "↑ Increases Prediction"
+                        impact_color = "#DC2626"
+                        impact_bg = "#fef2f2"
+                        sign = "+"
                     else:
-                        impact_text = f"{impact*100:.1f}% (No O₂)"
-                        impact_color = "#059669"  # Green
-                        bg_color = "#f0fdf4"
-                        border_color = "#bbf7d0"
+                        impact_label = "↓ Decreases Prediction"
+                        impact_color = "#2563EB"
+                        impact_bg = "#eff6ff"
+                        sign = ""
+                    row_bg = "#ffffff" if i % 2 == 0 else "#f8fafc"
+                    table_rows += f"""
+                    <tr style="background-color: {row_bg};">
+                        <td style="padding: 0.7rem 1rem; font-weight: 600; color: #0f172a; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9;">
+                            {get_shap_feature_icon(sv['feature'])} {sv['feature']}
+                        </td>
+                        <td style="padding: 0.7rem 1rem; color: #475569; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                            <strong>{sv['patient_value']}</strong>
+                        </td>
+                        <td style="padding: 0.7rem 1rem; font-family: 'Courier New', monospace; font-weight: 700; color: {impact_color}; font-size: 0.82rem; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                            {sign}{shap_val:.4f}
+                        </td>
+                        <td style="padding: 0.7rem 1rem; border-bottom: 1px solid #f1f5f9; text-align: center;">
+                            <span style="background-color: {impact_bg}; color: {impact_color}; font-size: 0.7rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                {impact_label}
+                            </span>
+                        </td>
+                    </tr>
+                    """
 
-                    with cols_xai[idx]:
+                st_html(f"""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-radius: 16px;
+                    overflow: hidden;
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+                    margin-bottom: 1.5rem;
+                ">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: linear-gradient(135deg, #0a2e52 0%, #1e40af 100%);">
+                                <th style="padding: 0.8rem 1rem; text-align: left; color: #ffffff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Feature</th>
+                                <th style="padding: 0.8rem 1rem; text-align: center; color: #ffffff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Patient Value</th>
+                                <th style="padding: 0.8rem 1rem; text-align: center; color: #ffffff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">SHAP Value</th>
+                                <th style="padding: 0.8rem 1rem; text-align: center; color: #ffffff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Impact</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows}
+                        </tbody>
+                    </table>
+                </div>
+                """)
+
+                # ── Section 4: Positive / Negative Split ──────────────────
+                st_html("<h3 class=\"section-title-custom\">⚖️ Feature Impact Direction</h3>")
+
+                col_pos, col_neg = st.columns(2)
+
+                with col_pos:
+                    pos_items = ""
+                    for pf in positive_factors[:6]:
+                        pos_items += f"""
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #fef2f2;">
+                            <span style="font-size: 0.8rem; color: #991b1b; font-weight: 500;">{get_shap_feature_icon(pf['feature'])} {pf['feature']}</span>
+                            <span style="font-family: monospace; font-weight: 700; color: #DC2626; font-size: 0.8rem;">+{pf['shap_value']:.4f}</span>
+                        </div>
+                        """
+                    if not positive_factors:
+                        pos_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>No significant positive factors</p>"
+                    st_html(f"""
+                    <div style="
+                        background: #ffffff;
+                        border: 1px solid #fecaca;
+                        border-top: 4px solid #DC2626;
+                        border-radius: 16px;
+                        padding: 1.2rem 1.5rem;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+                        margin-bottom: 1.5rem;
+                        height: 100%;
+                    ">
+                        <div style="font-size: 0.9rem; font-weight: 700; color: #DC2626; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
+                            ⬆️ Features Increasing Prediction
+                        </div>
+                        {pos_items}
+                    </div>
+                    """)
+
+                with col_neg:
+                    neg_items = ""
+                    for nf in negative_factors[:6]:
+                        neg_items += f"""
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #eff6ff;">
+                            <span style="font-size: 0.8rem; color: #1e40af; font-weight: 500;">{get_shap_feature_icon(nf['feature'])} {nf['feature']}</span>
+                            <span style="font-family: monospace; font-weight: 700; color: #2563EB; font-size: 0.8rem;">{nf['shap_value']:.4f}</span>
+                        </div>
+                        """
+                    if not negative_factors:
+                        neg_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>No significant negative factors</p>"
+                    st_html(f"""
+                    <div style="
+                        background: #ffffff;
+                        border: 1px solid #bfdbfe;
+                        border-top: 4px solid #2563EB;
+                        border-radius: 16px;
+                        padding: 1.2rem 1.5rem;
+                        box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+                        margin-bottom: 1.5rem;
+                        height: 100%;
+                    ">
+                        <div style="font-size: 0.9rem; font-weight: 700; color: #2563EB; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
+                            ⬇️ Features Decreasing Prediction
+                        </div>
+                        {neg_items}
+                    </div>
+                    """)
+
+                # ── Section 5: Interactive Plotly SHAP Bar Chart ──────────
+                st_html("<h3 class=\"section-title-custom\">📈 SHAP Value Distribution (Interactive)</h3>")
+
+                if use_plotly:
+                    chart_data = list(reversed(top_10))
+                    chart_features = [d["feature"] for d in chart_data]
+                    chart_shap = [d["shap_value"] for d in chart_data]
+                    chart_colors = ["#DC2626" if v > 0 else "#2563EB" for v in chart_shap]
+
+                    fig_shap = go.Figure(go.Bar(
+                        x=chart_shap,
+                        y=chart_features,
+                        orientation='h',
+                        marker=dict(
+                            color=chart_colors,
+                            line=dict(width=0),
+                        ),
+                        hovertemplate="<b>%{y}</b><br>SHAP Value: %{x:.4f}<extra></extra>"
+                    ))
+                    fig_shap.update_layout(
+                        height=380,
+                        margin=dict(t=10, b=30, l=10, r=20),
+                        paper_bgcolor="rgba(0,0,0,0)",
+                        plot_bgcolor="rgba(0,0,0,0)",
+                        font=dict(family="Inter", color="#0a2e52", size=12),
+                        xaxis=dict(
+                            title="SHAP Value (impact on prediction)",
+                            titlefont=dict(size=11, color="#64748b"),
+                            gridcolor="#f1f5f9",
+                            zerolinecolor="#cbd5e1",
+                            zerolinewidth=2,
+                        ),
+                        yaxis=dict(
+                            tickfont=dict(size=11),
+                            automargin=True,
+                        ),
+                    )
+                    st.plotly_chart(fig_shap, use_container_width=True, config={
+                        'displayModeBar': True,
+                        'modeBarButtonsToRemove': ['lasso2d', 'select2d'],
+                        'displaylogo': False,
+                    })
+                else:
+                    st.info("ℹ️ Install Plotly (`pip install plotly`) for an interactive SHAP chart.")
+
+                # ── Section 6: Clinical Interpretation ────────────────────
+                interpretation = generate_shap_clinical_interpretation(shap_result, label)
+                st_html(f"""
+                <div style="
+                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+                    border: 1px solid #bfdbfe;
+                    border-left: 5px solid #2563eb;
+                    border-radius: 14px;
+                    padding: 1.5rem 1.8rem;
+                    margin-bottom: 1.5rem;
+                    box-shadow: 0 4px 16px rgba(37, 99, 235, 0.06);
+                ">
+                    <h4 style="margin: 0 0 0.6rem 0; color: #0a2e52; font-weight: 700; font-size: 1rem; display: flex; align-items: center; gap: 0.4rem;">
+                        💡 Clinical Interpretation
+                    </h4>
+                    <p style="margin: 0; color: #1e293b; font-size: 0.85rem; line-height: 1.7;">
+                        {interpretation}
+                    </p>
+                </div>
+                """)
+
+                # ── Section 7: Top 5 Feature Importance Cards ─────────────
+                st_html("<h3 class=\"section-title-custom\">🏆 Top 5 Most Influential Features</h3>")
+
+                top_5_shap = shap_values_list[:5]
+                cols_top5 = st.columns(5)
+                for idx, sv in enumerate(top_5_shap):
+                    shap_val = sv["shap_value"]
+                    icon = get_shap_feature_icon(sv["feature"])
+                    if shap_val > 0:
+                        card_bg = "#fdf2f2"
+                        card_border = "#fecaca"
+                        val_color = "#DC2626"
+                        sign = "+"
+                    else:
+                        card_bg = "#eff6ff"
+                        card_border = "#bfdbfe"
+                        val_color = "#2563EB"
+                        sign = ""
+                    with cols_top5[idx]:
                         st_html(f"""
                         <div style="
-                            background-color: {bg_color};
-                            border: 1px solid {border_color};
-                            border-radius: 12px;
-                            padding: 0.8rem;
-                            min-height: 140px;
+                            background-color: {card_bg};
+                            border: 1px solid {card_border};
+                            border-radius: 14px;
+                            padding: 1rem;
+                            min-height: 150px;
                             display: flex;
                             flex-direction: column;
                             justify-content: space-between;
-                            box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+                            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+                            transition: all 0.25s ease;
                         ">
                             <div>
-                                <div style="font-size: 1.2rem; margin-bottom: 0.2rem;">{icon}</div>
-                                <div style="font-size: 0.76rem; font-weight: 700; color: #1e3a5f; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
-                                    {feat_name}
+                                <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">{icon}</div>
+                                <div style="font-size: 0.76rem; font-weight: 700; color: #0a2e52; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                                    {sv['feature']}
                                 </div>
                             </div>
-                            <div style="margin-top: 0.5rem;">
-                                <div style="font-size: 0.72rem; color: #475569;">Value: <strong>{val}</strong></div>
-                                <div style="font-size: 0.72rem; font-weight: 700; color: {impact_color}; margin-top: 0.1rem;">
-                                    Impact: {impact_text}
+                            <div style="margin-top: 0.6rem;">
+                                <div style="font-size: 0.65rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Contribution</div>
+                                <div style="font-size: 1.1rem; font-weight: 800; color: {val_color}; margin-top: 0.1rem;">
+                                    {sign}{shap_val:.4f}
                                 </div>
                             </div>
                         </div>
@@ -915,23 +1138,41 @@ if predict_clicked:
 
                 st.markdown("")
 
-                # Clinical Interpretation Box
-                interpretation_text = get_clinical_interpretation(label, top_5)
-                st_html(f"""
+                # ── Section 8: Explainability Summary ─────────────────────
+                st_html("<h3 class=\"section-title-custom\">📋 Explainability Summary</h3>")
+
+                n_positive = len(positive_factors)
+                n_negative = len(negative_factors)
+                most_influential = shap_values_list[0]["feature"] if shap_values_list else "N/A"
+
+                sm1, sm2, sm3, sm4 = st.columns(4)
+                with sm1:
+                    st.metric("Prediction Confidence", f"{prob_pct:.1f}%")
+                with sm2:
+                    st.metric("Top Positive Factors", f"{n_positive}")
+                with sm3:
+                    st.metric("Top Negative Factors", f"{n_negative}")
+                with sm4:
+                    st.metric("Most Influential", most_influential[:20])
+
+                st.markdown("")
+
+                # ── Section 9: Academic SHAP Note ─────────────────────────
+                st_html("""
                 <div style="
-                    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
-                    border: 1px solid #bfdbfe;
+                    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+                    border: 1px solid #e2e8f0;
                     border-radius: 12px;
                     padding: 1rem 1.3rem;
-                    margin-top: 0.5rem;
-                    margin-bottom: 1.2rem;
-                    box-shadow: 0 2px 8px rgba(10, 46, 82, 0.05);
+                    margin-bottom: 1rem;
+                    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
                 ">
-                    <h4 style="margin: 0 0 0.4rem 0; color: #0a2e52; font-weight: 700; font-size: 0.9rem;">
-                        💡 Clinical Interpretation
-                    </h4>
-                    <p style="margin: 0; color: #1e293b; font-size: 0.82rem; line-height: 1.6;">
-                        {interpretation_text}
+                    <p style="margin: 0; color: #475569; font-size: 0.78rem; line-height: 1.7;">
+                        <strong style="color: #0a2e52;">📚 About SHAP Values:</strong>
+                        SHAP (SHapley Additive exPlanations) values quantify how much each feature contributes to an individual prediction.
+                        Positive SHAP values <strong style="color: #DC2626;">increase</strong> the probability of Oxygen Therapy,
+                        while negative values <strong style="color: #2563EB;">reduce</strong> it.
+                        The sum of all SHAP values plus the base value equals the model's prediction output for this patient.
                     </p>
                 </div>
                 """)
