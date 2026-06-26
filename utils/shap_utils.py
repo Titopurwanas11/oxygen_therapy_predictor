@@ -485,3 +485,275 @@ def get_shap_feature_icon(feature_name: str) -> str:
     if "dehydration" in name:
         return "💧"
     return "📋"
+
+
+def generate_ai_clinical_summary(prediction: int, probability: float, shap_values: list, feature_names: list, feature_values: dict) -> str:
+    """
+    Generate a professional, dynamic clinical narrative using SHAP values.
+
+    Args:
+        prediction: 0 or 1.
+        probability: float, predicted probability for class 1.
+        shap_values: list of dicts with 'feature' and 'shap_value'.
+        feature_names: list of feature names.
+        feature_values: dict of {feature_name: value}.
+
+    Returns:
+        str: Scientific narrative paragraph.
+    """
+    # 1. Calculate confidence
+    if prediction == 1:
+        confidence = probability * 100
+    else:
+        confidence = (1.0 - probability) * 100
+
+    # 2. Extract age in months for threshold checks
+    age_months = float(feature_values.get("Age (months)", 24))
+
+    # 3. Clinical feature description converter
+    def describe_feature(feat, val):
+        feat_lower = feat.lower()
+        val_str = str(val).strip()
+
+        if "wheezing" in feat_lower:
+            return "wheezing" if val_str == "Yes" else "absence of wheezing"
+        elif "nasal flaring" in feat_lower:
+            return "nasal flaring" if val_str == "Yes" else "absence of nasal flaring"
+        elif "cyanosis" in feat_lower:
+            return "cyanosis" if val_str == "Yes" else "absence of cyanosis"
+        elif "restlessness" in feat_lower:
+            return "restlessness" if val_str == "Yes" else "absence of restlessness"
+        elif "sleepiness" in feat_lower:
+            return "unusual sleepiness" if val_str == "Yes" else "absence of unusual sleepiness"
+        elif "crackles" in feat_lower:
+            return "crackles on auscultation" if val_str == "Yes" else "absence of crackles"
+        elif "rhonchi" in feat_lower:
+            return "rhonchi" if val_str == "Yes" else "absence of rhonchi"
+        elif "dehydration" in feat_lower:
+            return "signs of dehydration" if val_str == "Yes" else "absence of dehydration signs"
+        elif "consciousness" in feat_lower:
+            return "disorders of consciousness" if val_str == "Yes" else "normal consciousness level"
+        elif "paleness" in feat_lower:
+            return "paleness" if val_str == "Yes" else "absence of paleness"
+        elif "stridor" in feat_lower:
+            return "laryngeal stridor" if val_str == "Yes" else "absence of laryngeal stridor"
+        elif "hypoventilation" in feat_lower:
+            return "hypoventilation" if val_str == "Yes" else "normal ventilation"
+        elif "aspiration" in feat_lower:
+            return "nasopharyngeal aspiration performed" if val_str == "Yes" else "absence of aspiration history"
+        elif "smokers" in feat_lower:
+            return "exposure to tobacco smoke at home" if val_str == "Yes" else "no tobacco smoke exposure"
+        elif "tuberculosis" in feat_lower:
+            return "exposure to a tuberculosis patient" if val_str == "Yes" else "no tuberculosis contact"
+        elif "prematurity" in feat_lower:
+            return "history of prematurity" if val_str == "Yes" else "full-term birth history"
+        elif "prior admission" in feat_lower:
+            return "prior respiratory admission" if val_str == "Yes" else "no prior respiratory admissions"
+        elif "asthma" in feat_lower:
+            return "history of asthma" if val_str == "Yes" else "no asthma history"
+        elif "chronic condition" in feat_lower:
+            return "presence of chronic condition" if val_str == "Yes" else "no chronic conditions"
+        elif "antibiotic" in feat_lower:
+            return "recent antibiotic usage" if val_str == "Yes" else "no recent antibiotic usage"
+        elif "breastfeeding" in feat_lower:
+            return "history of breastfeeding" if val_str == "Yes" else "no breastfeeding history"
+        elif "medical insurance" in feat_lower:
+            return "medical insurance coverage" if val_str == "Yes" else "no medical insurance coverage"
+
+        elif "oxygen saturation" in feat_lower or "sao2" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 96.0
+            if v < 90:
+                return "decreased oxygen saturation"
+            elif 90 <= v <= 94:
+                return "mild oxygen desaturation"
+            else:
+                return "normal oxygen saturation"
+
+        elif "respiratory rate" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 30.0
+            if age_months < 2:
+                is_high = v >= 60
+            elif age_months < 12:
+                is_high = v >= 50
+            elif age_months < 60:
+                is_high = v >= 40
+            else:
+                is_high = v >= 30
+            return "elevated respiratory rate" if is_high else "normal respiratory rate"
+
+        elif "temperature" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 37.0
+            if v >= 38.0:
+                return "mild fever" if v < 39.0 else "high fever"
+            else:
+                return "normal body temperature"
+
+        elif "heart rate" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 120.0
+            is_tachy = v > 140 if age_months < 12 else v > 120
+            return "elevated heart rate" if is_tachy else "normal heart rate"
+
+        elif "c-reactive protein" in feat_lower or "crp" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 10.0
+            return "elevated C-reactive protein" if v > 10.0 else "normal C-reactive protein level"
+
+        elif "procalcitonin" in feat_lower:
+            try:
+                v = float(val)
+            except ValueError:
+                v = 0.5
+            return "elevated procalcitonin level" if v > 0.5 else "normal procalcitonin level"
+
+        elif "vaccinations" in feat_lower:
+            if val_str == "Yes":
+                return "complete vaccination status"
+            elif val_str == "Partially":
+                return "partially complete vaccination status"
+            else:
+                return "incomplete vaccination status"
+
+        elif "vomiting" in feat_lower and "days" in feat_lower:
+            return f"vomiting duration of {val_str} days"
+        elif "vomiting" in feat_lower:
+            return "vomiting" if val_str == "Yes" else "no vomiting"
+
+        elif "fever" in feat_lower and "days" in feat_lower:
+            return f"fever duration of {val_str} days"
+        elif "fever" in feat_lower:
+            return "fever history" if val_str == "Yes" else "no fever"
+
+        elif "cough" in feat_lower:
+            return "cough" if val_str == "Yes" else "no cough"
+        elif "diarrhea" in feat_lower:
+            return "diarrhea" if val_str == "Yes" else "no diarrhea"
+        elif "rhinorrhea" in feat_lower:
+            return "rhinorrhea" if val_str == "Yes" else "no rhinorrhea"
+
+        elif "age" in feat_lower:
+            return f"patient age of {val_str} months"
+        elif "weight" in feat_lower:
+            return f"body weight of {val_str} Kg"
+        elif "height" in feat_lower:
+            return f"body height of {val_str} cm"
+
+        # fallback
+        return f"presence of {feat.lower()}" if val_str == "Yes" else f"absence of {feat.lower()}"
+
+    def format_shap_value(s_val):
+        sign = "+" if s_val > 0 else ""
+        return f"({sign}{s_val:.2f} SHAP)"
+
+    # Filter and sort SHAP values
+    pos_contribs = [s for s in shap_values if s["shap_value"] > 0]
+    neg_contribs = [s for s in shap_values if s["shap_value"] < 0]
+
+    # Sort descending for positive, ascending for negative (most negative first)
+    pos_contribs.sort(key=lambda x: x["shap_value"], reverse=True)
+    neg_contribs.sort(key=lambda x: x["shap_value"])
+
+    sentences = []
+
+    if prediction == 1:
+        # 1. Prediction Sentence
+        sentences.append(f"The model predicts that the patient requires oxygen therapy with a confidence of {confidence:.1f}%.")
+
+        # 2. Strongest Contributors (Positive SHAP)
+        top_pos = pos_contribs[:3]
+        if len(top_pos) >= 3:
+            p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
+            p2_desc = describe_feature(top_pos[1]["feature"], feature_values.get(top_pos[1]["feature"], ""))
+            p3_desc = describe_feature(top_pos[2]["feature"], feature_values.get(top_pos[2]["feature"], ""))
+
+            p1_shap = format_shap_value(top_pos[0]["shap_value"])
+            p2_shap = format_shap_value(top_pos[1]["shap_value"])
+            p3_shap = format_shap_value(top_pos[2]["shap_value"])
+
+            sentences.append(f"The strongest contributors increasing the predicted risk were {p1_desc} {p1_shap}, {p2_desc} {p2_shap}, and {p3_desc} {p3_shap}, suggesting significant respiratory distress.")
+        elif len(top_pos) == 2:
+            p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
+            p2_desc = describe_feature(top_pos[1]["feature"], feature_values.get(top_pos[1]["feature"], ""))
+            p1_shap = format_shap_value(top_pos[0]["shap_value"])
+            p2_shap = format_shap_value(top_pos[1]["shap_value"])
+            sentences.append(f"The strongest contributors increasing the predicted risk were {p1_desc} {p1_shap} and {p2_desc} {p2_shap}, suggesting significant respiratory distress.")
+
+        # 3. Opposing Contributors (Negative SHAP)
+        top_neg = neg_contribs[:2]
+        if len(top_neg) >= 2:
+            n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
+            n2_desc = describe_feature(top_neg[1]["feature"], feature_values.get(top_neg[1]["feature"], ""))
+
+            n1_shap = format_shap_value(top_neg[0]["shap_value"])
+            n2_shap = format_shap_value(top_neg[1]["shap_value"])
+
+            sentences.append(f"Conversely, the {n1_desc} {n1_shap} and {n2_desc} {n2_shap} slightly reduced the predicted probability.")
+        elif len(top_neg) == 1:
+            n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
+            n1_shap = format_shap_value(top_neg[0]["shap_value"])
+            sentences.append(f"Conversely, the {n1_desc} {n1_shap} slightly reduced the predicted probability.")
+
+        # 4. Overall Interpretation
+        sentences.append("Overall, the patient's clinical presentation demonstrates multiple indicators associated with respiratory compromise, making oxygen therapy highly recommended according to the model.")
+
+        # 5. CDSS Disclaimer
+        sentences.append("This explanation is generated directly from SHAP values and should be interpreted as a Clinical Decision Support System (CDSS) recommendation rather than a definitive medical diagnosis.")
+
+    else:
+        # 1. Prediction Sentence
+        sentences.append(f"The model predicts that the patient does not currently require oxygen therapy with a confidence of {confidence:.1f}%.")
+
+        # 2. Strongest Contributors supporting No prediction (Negative SHAP)
+        top_neg = neg_contribs[:3]
+        if len(top_neg) >= 3:
+            n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
+            n2_desc = describe_feature(top_neg[1]["feature"], feature_values.get(top_neg[1]["feature"], ""))
+            n3_desc = describe_feature(top_neg[2]["feature"], feature_values.get(top_neg[2]["feature"], ""))
+
+            n1_shap = format_shap_value(top_neg[0]["shap_value"])
+            n2_shap = format_shap_value(top_neg[1]["shap_value"])
+            n3_shap = format_shap_value(top_neg[2]["shap_value"])
+
+            sentences.append(f"The most influential findings supporting this prediction include {n1_desc} {n1_shap}, {n2_desc} {n2_shap}, and {n3_desc} {n3_shap}.")
+        elif len(top_neg) == 2:
+            n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
+            n2_desc = describe_feature(top_neg[1]["feature"], feature_values.get(top_neg[1]["feature"], ""))
+            n1_shap = format_shap_value(top_neg[0]["shap_value"])
+            n2_shap = format_shap_value(top_neg[1]["shap_value"])
+            sentences.append(f"The most influential findings supporting this prediction include {n1_desc} {n1_shap} and {n2_desc} {n2_shap}.")
+
+        # 3. Opposing Contributors (Positive SHAP)
+        top_pos = pos_contribs[:2]
+        if len(top_pos) >= 2:
+            p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
+            p2_desc = describe_feature(top_pos[1]["feature"], feature_values.get(top_pos[1]["feature"], ""))
+
+            p1_shap = format_shap_value(top_pos[0]["shap_value"])
+            p2_shap = format_shap_value(top_pos[1]["shap_value"])
+
+            sentences.append(f"Although {p1_desc} {p1_shap} and {p2_desc} {p2_shap} slightly increased the predicted risk, their overall contribution was outweighed by the patient's stable respiratory condition.")
+        elif len(top_pos) == 1:
+            p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
+            p1_shap = format_shap_value(top_pos[0]["shap_value"])
+            sentences.append(f"Although {p1_desc} {p1_shap} slightly increased the predicted risk, its overall contribution was outweighed by the patient's stable respiratory condition.")
+
+        # 4. Overall Interpretation
+        sentences.append("Overall, the patient's clinical findings suggest a relatively low probability of requiring oxygen therapy at this time.")
+
+        # 5. Recommendation
+        sentences.append("Clinical monitoring is still recommended should respiratory symptoms worsen.")
+
+    return " ".join(sentences)

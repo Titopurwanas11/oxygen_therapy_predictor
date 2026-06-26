@@ -860,6 +860,7 @@ if predict_clicked:
                 compute_shap_for_patient,
                 generate_shap_clinical_interpretation,
                 get_shap_feature_icon,
+                generate_ai_clinical_summary,
             )
 
             # ── Section 1: Header ─────────────────────────────────────────
@@ -1067,6 +1068,54 @@ if predict_clicked:
                     })
                 else:
                     st.info("ℹ️ Install Plotly (`pip install plotly`) for an interactive SHAP chart.")
+
+                # ── Section 5.5: AI Clinical Summary (Explainable AI) ─────
+                pred_val = 1 if label == "Yes" else 0
+
+                narrative_text = generate_ai_clinical_summary(
+                    prediction=pred_val,
+                    probability=shap_prob,
+                    shap_values=shap_values_list,
+                    feature_names=ALL_FEATURES,
+                    feature_values=patient_data
+                )
+
+                st_html(f"""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-left: 6px solid #2563eb;
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin-top: 1.5rem;
+                    margin-bottom: 2rem;
+                    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+                    font-family: 'Inter', sans-serif;
+                ">
+                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
+                        <span style="font-size: 1.5rem; line-height: 1;">🩺</span>
+                        <div>
+                            <h4 style="margin: 0; color: #0a2e52; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.3px; line-height: 1.2;">
+                                AI Clinical Summary
+                            </h4>
+                            <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.1rem;">
+                                Generated from SHAP Explainable AI
+                            </div>
+                        </div>
+                    </div>
+
+                    <p style="
+                        margin: 0; 
+                        color: #1e293b; 
+                        font-size: 0.88rem; 
+                        line-height: 1.75; 
+                        font-weight: 500;
+                        text-align: justify;
+                    ">
+                        {narrative_text}
+                    </p>
+                </div>
+                """)
 
                 # ── Section 6: Clinical Interpretation ────────────────────
                 interpretation = generate_shap_clinical_interpretation(shap_result, label)
