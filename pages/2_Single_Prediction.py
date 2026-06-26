@@ -17,7 +17,20 @@ from utils.config import (
     ALL_FEATURES,
     setup_page,
 )
-from utils.prediction import predict_single
+from utils.prediction import predict_single, get_confidence_level, get_risk_level
+from utils.pdf_report import generate_pdf_report
+from utils.shap_utils import (
+    compute_shap_for_patient,
+    generate_shap_clinical_interpretation,
+    get_shap_feature_icon,
+    generate_ai_clinical_summary,
+)
+from utils.session_analytics import (
+    init_analytics_state,
+    track_single_prediction,
+    track_pdf_report_generated,
+)
+from utils.recommendation import generate_recommendation
 
 # Try imports with graceful fallbacks
 try:
@@ -26,14 +39,9 @@ try:
 except ImportError:
     use_plotly = False
 
-try:
-    from fpdf import FPDF
-    has_fpdf = True
-except ImportError:
-    has_fpdf = False
-
 st.set_page_config(page_title="Prediksi Pasien — OxyPredict", page_icon="🫁", layout="wide")
 setup_page("Prediksi Pasien — OxyPredict")
+init_analytics_state()
 
 # Helper function to render HTML safely without markdown layout side-effects
 def st_html(html_str):
@@ -393,191 +401,12 @@ with col_btn_c:
         type="primary"
     )
 
-# ─── PDF / HTML Exporter function ───────────────────────────────────────────
-def generate_html_report(age_months, gender, weight, height, bmi, bmi_category, label, prob_yes_pct, confidence_level, prob_pct, risk_level, risk_color, sao2, rr, is_tachypnea, temp, wheezing, nasal_flaring, now):
-    return f"""
-    <!DOCTYPE html>
-    <html>
-    <head>
-    <meta charset="utf-8">
-    <title>OxyPredict Clinical Report</title>
-    <style>
-        body {{ font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #333; line-height: 1.6; padding: 20px; }}
-        .report-card {{ border: 2px solid #0A2E52; border-radius: 12px; padding: 30px; max-width: 600px; margin: 0 auto; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }}
-        .header {{ text-align: center; border-bottom: 2px solid #eff6ff; padding-bottom: 15px; margin-bottom: 20px; }}
-        .header h2 {{ margin: 0; color: #0A2E52; }}
-        .header p {{ margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem; }}
-        .section {{ margin-bottom: 20px; }}
-        .section-title {{ font-weight: bold; color: #0A2E52; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; margin-bottom: 10px; font-size: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }}
-        .grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; font-size: 0.9rem; }}
-        .label {{ color: #64748b; }}
-        .value {{ font-weight: bold; color: #0f172a; }}
-        .result-box {{ border: 1px solid #bfdbfe; border-radius: 8px; padding: 15px; text-align: center; margin-top: 15px; }}
-        .result-title {{ font-size: 1.1rem; font-weight: 800; }}
-        .result-val {{ font-size: 1.4rem; font-weight: 800; margin: 10px 0; }}
-        .disclaimer {{ font-size: 0.75rem; color: #94a3b8; text-align: center; margin-top: 30px; border-top: 1px solid #e2e8f0; padding-top: 15px; line-height: 1.4; }}
-    </style>
-    </head>
-    <body>
-    <div class="report-card">
-        <div class="header">
-            <h2>🫁 OxyPredict Clinical Report</h2>
-            <p>Clinical Decision Support System (CDSS) Prediction Report</p>
-        </div>
-        
-        <div class="section">
-            <div class="section-title">Patient Summary Overview</div>
-            <div class="grid">
-                <div class="label">Age:</div><div class="value">{age_months} months</div>
-                <div class="label">Gender:</div><div class="value">{gender}</div>
-                <div class="label">Weight / Height:</div><div class="value">{weight:.1f} Kg / {height:.1f} cm</div>
-                <div class="label">Calculated BMI:</div><div class="value">{bmi:.2f} ({bmi_category})</div>
-            </div>
-        </div>
-        
-        <div class="section">
-            <div class="section-title">Prediction Result</div>
-            <div class="result-box" style="background-color: {'#fdf2f2' if label == 'Yes' else '#f0fdf4'}; border-color: {'#fecaca' if label == 'Yes' else '#bbf7d0'};">
-                <div class="result-title" style="color: {'#991b1b' if label == 'Yes' else '#14532d'};">PREDICTED DECISION</div>
-                <div class="result-val" style="color: {'#dc2626' if label == 'Yes' else '#16a34a'};">
-                    {'⚠️ Need Oxygen Therapy' if label == 'Yes' else '✅ No Oxygen Therapy Needed'}
-                </div>
-                <div style="font-size: 0.85rem; color: #475569; line-height: 1.5;">
-                    Probability of Needing Oxygen: <strong>{prob_yes_pct:.1f}%</strong><br>
-                    Confidence Level: <strong>{confidence_level} ({prob_pct:.1f}%)</strong><br>
-                    Clinical Risk Level: <strong style="color: {risk_color};">{risk_level}</strong>
-                </div>
-            </div>
-        </div>
-        
-        <div class="section" style="margin-top: 15px;">
-            <div class="section-title">Key Clinical Indicators Checked</div>
-            <ul style="font-size: 0.85rem; padding-left: 20px; line-height: 1.6; color: #475569;">
-                <li>Oxygen Saturation (SaO2): <strong>{sao2:.1f}%</strong> ({'Low Saturation' if sao2 < 92 else 'Normal'})</li>
-                <li>Respiratory Rate: <strong>{rr} bpm</strong> ({'Tachypnea' if is_tachypnea else 'Normal'})</li>
-                <li>Axillary Temperature: <strong>{temp:.1f}°C</strong> ({'Fever' if temp > 37.5 else 'Normal'})</li>
-                <li>Wheezing: <strong>{wheezing}</strong></li>
-                <li>Nasal Flaring: <strong>{nasal_flaring}</strong></li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <div class="section-title">Report Metadata</div>
-            <div class="grid">
-                <div class="label">Date & Time Generated:</div><div class="value">{now}</div>
-                <div class="label">Model:</div><div class="value">Random Forest Classifier Pipeline</div>
-            </div>
-        </div>
-        
-        <div class="disclaimer">
-            <strong>Disclaimer:</strong> This clinical report is automatically generated by the OxyPredict CDSS for educational/thesis purposes. All clinical decisions must be confirmed and supervised by a qualified pediatrician or medical officer.
-        </div>
-    </div>
-    </body>
-    </html>
-    """
-
-def generate_pdf_report(age_months, gender, weight, height, bmi, bmi_category, label, prob_yes_pct, confidence_level, prob_pct, risk_level, risk_color_rgb, sao2, rr, is_tachypnea, temp, wheezing, nasal_flaring, now):
-    if not has_fpdf:
-        return None
-    try:
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Helvetica", size=12)
-        
-        # Header Box
-        pdf.set_fill_color(10, 46, 82) # Navy blue
-        pdf.rect(0, 0, 210, 40, 'F')
-        
-        pdf.set_text_color(255, 255, 255)
-        pdf.set_font("Helvetica", style="B", size=18)
-        pdf.cell(0, 10, "OxyPredict - Clinical Report", ln=True, align="C")
-        pdf.set_font("Helvetica", size=10)
-        pdf.cell(0, 5, "Clinical Decision Support System (CDSS) for Pediatric Oxygen Therapy", ln=True, align="C")
-        pdf.ln(20)
-        
-        pdf.set_text_color(15, 23, 42) # Dark grey
-        pdf.set_font("Helvetica", style="B", size=14)
-        pdf.cell(0, 10, "1. Patient Summary Overview", ln=True)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(5)
-        
-        pdf.set_font("Helvetica", size=10)
-        pdf.cell(50, 8, "Age:", 0)
-        pdf.cell(0, 8, f"{age_months} months", ln=True)
-        pdf.cell(50, 8, "Gender:", 0)
-        pdf.cell(0, 8, f"{gender}", ln=True)
-        pdf.cell(50, 8, "Weight / Height:", 0)
-        pdf.cell(0, 8, f"{weight:.1f} Kg / {height:.1f} cm", ln=True)
-        pdf.cell(50, 8, "Calculated BMI:", 0)
-        pdf.cell(0, 8, f"{bmi:.2f} ({bmi_category})", ln=True)
-        pdf.ln(5)
-        
-        pdf.set_font("Helvetica", style="B", size=14)
-        pdf.cell(0, 10, "2. Prediction Details", ln=True)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(5)
-        
-        pdf.set_font("Helvetica", style="B", size=12)
-        pred_label = "Need Oxygen Therapy" if label == "Yes" else "No Oxygen Therapy Needed"
-        pdf.cell(50, 8, "Predicted Outcome:", 0)
-        pdf.cell(0, 8, f"{pred_label}", ln=True)
-        
-        pdf.set_font("Helvetica", size=10)
-        pdf.cell(50, 8, "Probability of Need:", 0)
-        pdf.cell(0, 8, f"{prob_yes_pct:.1f}%", ln=True)
-        pdf.cell(50, 8, "Confidence Level:", 0)
-        pdf.cell(0, 8, f"{confidence_level} ({prob_pct:.1f}%)", ln=True)
-        pdf.cell(50, 8, "Clinical Risk Level:", 0)
-        
-        # Color code risk text in PDF
-        pdf.set_text_color(risk_color_rgb[0], risk_color_rgb[1], risk_color_rgb[2])
-        pdf.set_font("Helvetica", style="B", size=10)
-        pdf.cell(0, 8, f"{risk_level}", ln=True)
-        
-        pdf.set_text_color(15, 23, 42)
-        pdf.ln(5)
-        
-        pdf.set_font("Helvetica", style="B", size=14)
-        pdf.cell(0, 10, "3. Key Clinical Indicators Checked", ln=True)
-        pdf.line(10, pdf.get_y(), 200, pdf.get_y())
-        pdf.ln(5)
-        
-        pdf.set_font("Helvetica", size=10)
-        pdf.cell(80, 8, f"Oxygen Saturation (SaO2): {sao2:.1f}%", 0)
-        pdf.cell(0, 8, "[Low Saturation]" if sao2 < 92 else "[Normal Saturation]", ln=True)
-        pdf.cell(80, 8, f"Respiratory Rate: {rr} bpm", 0)
-        pdf.cell(0, 8, "[Tachypnea]" if is_tachypnea else "[Normal Rate]", ln=True)
-        pdf.cell(80, 8, f"Axillary Temperature: {temp:.1f} C", 0)
-        pdf.cell(0, 8, "[Fever]" if temp > 37.5 else "[Normal Temperature]", ln=True)
-        pdf.cell(80, 8, f"Wheezing presence: {wheezing}", ln=True)
-        pdf.cell(80, 8, f"Nasal flaring presence: {nasal_flaring}", ln=True)
-        pdf.ln(10)
-        
-        pdf.set_font("Helvetica", style="B", size=10)
-        pdf.cell(50, 6, "Report Timestamp:", 0)
-        pdf.set_font("Helvetica", size=10)
-        pdf.cell(0, 6, f"{now}", ln=True)
-        pdf.ln(15)
-        
-        # Disclaimer
-        pdf.set_font("Helvetica", style="I", size=8)
-        pdf.set_text_color(148, 163, 184)
-        pdf.multi_cell(0, 4, "Disclaimer: This clinical report is automatically generated by the OxyPredict CDSS for academic and research evaluation purposes. Final medical assessment and decisions remain the sole responsibility of a qualified medical professional.", 0, 'C')
-        
-        pdf_bytes = pdf.output()
-        if isinstance(pdf_bytes, str):
-            pdf_bytes = pdf_bytes.encode('latin1')
-        return bytes(pdf_bytes)
-    except Exception as pdf_err:
-        st.error(f"Error during PDF generation: {pdf_err}")
-        return None
-
 # ─── Prediction Result Rendering ─────────────────────────────────────────────
 if predict_clicked:
     with st.spinner("Processing CDSS Diagnostic Prediction..."):
         try:
             label, prob_yes = predict_single(patient_data)
+            track_single_prediction()
             prob_yes_pct = prob_yes * 100
             
             # Confidence Interpretation calculation
@@ -589,10 +418,13 @@ if predict_clicked:
                 
             if prob_pct > 85:
                 confidence_level = "High Confidence"
+                confidence_label = "High"
             elif 70 <= prob_pct <= 85:
                 confidence_level = "Moderate Confidence"
+                confidence_label = "Moderate"
             else:
                 confidence_level = "Low Confidence"
+                confidence_label = "Low"
 
             # Clinical Risk Badge calculation
             if prob_yes_pct >= 85:
@@ -616,6 +448,46 @@ if predict_clicked:
                 risk_color_rgb = (22, 163, 74)
                 risk_bg = "#f0fdf4"
                 risk_border = "#bbf7d0"
+
+            # Compute SHAP and AI Clinical Summary narrative upfront
+            shap_ok = False
+            shap_values_list = []
+            top_10 = []
+            positive_factors = []
+            negative_factors = []
+            narrative_text = "Clinical summary not available due to SHAP computation error."
+            
+            try:
+                shap_result = compute_shap_for_patient(patient_data)
+                shap_values_list = shap_result["shap_values"]
+                shap_base = shap_result["base_value"]
+                shap_prob = shap_result["predicted_prob"]
+                shap_ok = True
+                
+                top_10 = shap_values_list[:10]
+                positive_factors = [s for s in shap_values_list if s["shap_value"] > 0.005]
+                negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
+
+                pred_val = 1 if label == "Yes" else 0
+                narrative_text = generate_ai_clinical_summary(
+                    prediction=pred_val,
+                    probability=shap_prob,
+                    shap_values=shap_values_list,
+                    feature_names=ALL_FEATURES,
+                    feature_values=patient_data
+                )
+            except Exception as shap_err:
+                st.error(f"WARNING: Could not compute SHAP values: {shap_err}")
+
+            # Generate Clinical Recommendation
+            rec_dict = generate_recommendation(
+                prediction=label,
+                probability=prob_yes,
+                risk_level=risk_level,
+                confidence_level=confidence_label,
+                patient_data=patient_data,
+                top_shap_features=top_10
+            )
 
             st.markdown("<br>", unsafe_allow_html=True)
             st_html("<h3 class=\"section-title-custom\">🔮 Prediction Analysis & Summary</h3>")
@@ -713,49 +585,35 @@ if predict_clicked:
                 </div>
                 """)
 
-                # PDF/HTML Export Report Trigger
-                now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                
-                # HTML Report code
-                html_report_content = generate_html_report(
-                    age_months, gender, weight, height, bmi, bmi_category,
-                    label, prob_yes_pct, confidence_level, prob_pct,
-                    risk_level, risk_color, sao2, rr, is_tachypnea, temp,
-                    wheezing, nasal_flaring, now_str
-                )
-                
-                # Try generating PDF Report
+                # Generate professional PDF report using ReportLab
                 pdf_report_bytes = None
-                if has_fpdf:
+                try:
                     pdf_report_bytes = generate_pdf_report(
-                        age_months, gender, weight, height, bmi, bmi_category,
-                        label, prob_yes_pct, confidence_level, prob_pct,
-                        risk_level, risk_color_rgb, sao2, rr, is_tachypnea, temp,
-                        wheezing, nasal_flaring, now_str
+                        patient_data=patient_data,
+                        prediction=label,
+                        probability=prob_yes,
+                        confidence=confidence_label,
+                        risk_level=risk_level,
+                        clinical_summary=narrative_text,
+                        top_shap_features=top_10,
+                        shap_values=shap_values_list,
+                        feature_names=ALL_FEATURES,
+                        recommendation=rec_dict
                     )
+                except Exception as pdf_err:
+                    st.error(f"❌ Error generating PDF: {pdf_err}")
                 
-                # Columns for Export buttons
-                col_exp_1, col_exp_2 = st.columns(2)
-                with col_exp_1:
-                    if has_fpdf and pdf_report_bytes:
-                        st.download_button(
-                            label="📄 Download PDF Clinical Report",
-                            data=pdf_report_bytes,
-                            file_name=f"OxyPredict_Clinical_Report_{datetime.date.today()}.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                    else:
-                        st.download_button(
-                            label="📄 Download HTML Clinical Report",
-                            data=html_report_content,
-                            file_name=f"OxyPredict_Clinical_Report_{datetime.date.today()}.html",
-                            mime="text/html",
-                            use_container_width=True
-                        )
-                with col_exp_2:
-                    if not has_fpdf:
-                        st.info("ℹ️ Run `pip install fpdf2` to enable native PDF report exports.")
+                # Download Button for PDF Report
+                if pdf_report_bytes:
+                    report_filename = f"OxyPredict_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    st.download_button(
+                        label="📄 Download Clinical Report (PDF)",
+                        data=pdf_report_bytes,
+                        file_name=report_filename,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        on_click=track_pdf_report_generated
+                    )
                     
             with col_res_right:
                 # Gauge Chart rendering
@@ -856,12 +714,7 @@ if predict_clicked:
             # =================================================================
             # SHAP-Based AI Prediction Explanation
             # =================================================================
-            from utils.shap_utils import (
-                compute_shap_for_patient,
-                generate_shap_clinical_interpretation,
-                get_shap_feature_icon,
-                generate_ai_clinical_summary,
-            )
+
 
             # ── Section 1: Header ─────────────────────────────────────────
             st_html("""
@@ -883,16 +736,7 @@ if predict_clicked:
             """)
 
             # ── Section 2: Compute SHAP ───────────────────────────────────
-            with st.spinner("Computing SHAP values for this patient (TreeExplainer)..."):
-                try:
-                    shap_result = compute_shap_for_patient(patient_data)
-                    shap_values_list = shap_result["shap_values"]
-                    shap_base = shap_result["base_value"]
-                    shap_prob = shap_result["predicted_prob"]
-                    shap_ok = True
-                except Exception as shap_err:
-                    st.error(f"⚠️ Could not compute SHAP values: {shap_err}")
-                    shap_ok = False
+            # Already computed upfront
 
             if shap_ok:
                 top_10 = shap_values_list[:10]
@@ -1070,15 +914,7 @@ if predict_clicked:
                     st.info("ℹ️ Install Plotly (`pip install plotly`) for an interactive SHAP chart.")
 
                 # ── Section 5.5: AI Clinical Summary (Explainable AI) ─────
-                pred_val = 1 if label == "Yes" else 0
-
-                narrative_text = generate_ai_clinical_summary(
-                    prediction=pred_val,
-                    probability=shap_prob,
-                    shap_values=shap_values_list,
-                    feature_names=ALL_FEATURES,
-                    feature_values=patient_data
-                )
+                # Already computed upfront
 
                 st_html(f"""
                 <div style="
@@ -1114,6 +950,94 @@ if predict_clicked:
                     ">
                         {narrative_text}
                     </p>
+                </div>
+                """)
+
+                # ── Section 5.8: Clinical Recommendation Card ──────────────
+                priority_val = rec_dict["priority"]
+                if priority_val == "Emergency":
+                    border_col = "#dc2626"
+                    priority_icon = "🔴"
+                elif priority_val == "High":
+                    border_col = "#ea580c"
+                    priority_icon = "🟠"
+                elif priority_val == "Medium":
+                    border_col = "#ca8a04"
+                    priority_icon = "🟡"
+                else:
+                    border_col = "#16a34a"
+                    priority_icon = "🟢"
+
+                actions_html = "".join([f"<li style='margin-bottom: 0.3rem;'>{act}</li>" for act in rec_dict["clinical_action"]])
+                monitoring_html = "".join([f"<li style='margin-bottom: 0.3rem;'>{mon}</li>" for mon in rec_dict["monitoring"]])
+                notes_html = " ".join(rec_dict["notes"])
+
+                st_html(f"""
+                <div style="
+                    background: #ffffff;
+                    border: 1px solid #e2e8f0;
+                    border-left: 6px solid {border_col};
+                    border-radius: 16px;
+                    padding: 24px;
+                    margin-top: 1.5rem;
+                    margin-bottom: 2rem;
+                    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.03);
+                    font-family: 'Inter', sans-serif;
+                ">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="font-size: 1.5rem; line-height: 1;">🩺</span>
+                            <div>
+                                <h4 style="margin: 0; color: #0a2e52; font-weight: 800; font-size: 1.2rem; letter-spacing: -0.3px; line-height: 1.2;">
+                                    Clinical Recommendation
+                                </h4>
+                                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.1rem;">
+                                    Rule-Based CDSS Recommendation
+                                </div>
+                            </div>
+                        </div>
+                        <span style="
+                            background-color: {border_col}15;
+                            color: {border_col};
+                            border: 1px solid {border_col}30;
+                            font-size: 0.72rem;
+                            font-weight: 800;
+                            padding: 0.25rem 0.6rem;
+                            border-radius: 6px;
+                            text-transform: uppercase;
+                        ">
+                            {priority_icon} {priority_val} Priority
+                        </span>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
+                        <div>
+                            <h5 style="margin: 0 0 0.5rem 0; color: #0a2e52; font-size: 0.9rem; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.3rem;">Clinical Actions</h5>
+                            <ul style="margin: 0; padding-left: 1.2rem; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+                                {actions_html}
+                            </ul>
+                        </div>
+                        <div>
+                            <h5 style="margin: 0 0 0.5rem 0; color: #0a2e52; font-size: 0.9rem; font-weight: 700; border-bottom: 1px solid #f1f5f9; padding-bottom: 0.3rem;">Monitoring Guidelines</h5>
+                            <ul style="margin: 0; padding-left: 1.2rem; color: #334155; font-size: 0.85rem; line-height: 1.6;">
+                                {monitoring_html}
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div style="
+                        background-color: #fefbeb;
+                        border: 1px solid #fef08a;
+                        border-left: 4px solid #eab308;
+                        border-radius: 8px;
+                        padding: 0.8rem 1rem;
+                        font-size: 0.78rem;
+                        color: #713f12;
+                        line-height: 1.5;
+                    ">
+                        <strong>⚠️ CDSS Disclaimer & Guidelines:</strong><br/>
+                        {notes_html}
+                    </div>
                 </div>
                 """)
 

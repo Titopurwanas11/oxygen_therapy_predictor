@@ -86,3 +86,55 @@ def validate_columns(df: pd.DataFrame) -> tuple:
     is_valid = len(missing) == 0
 
     return is_valid, list(missing), list(extra)
+
+
+def get_confidence_level(probability: float, prediction: str) -> tuple:
+    """
+    Calculate the model's prediction confidence.
+
+    Args:
+        probability: float, predicted probability for class 1 (Yes).
+        prediction: str, 'Yes' or 'No'.
+
+    Returns:
+        Tuple of (confidence_percentage, confidence_label, confidence_color, confidence_icon).
+    """
+    if prediction == "Yes" or prediction == 1:
+        conf_pct = probability * 100
+    else:
+        conf_pct = (1.0 - probability) * 100
+
+    if conf_pct >= 95.0:
+        return conf_pct, "Very High", "#166534", "🟢"
+    elif conf_pct >= 90.0:
+        return conf_pct, "High", "#16a34a", "🟢"
+    elif conf_pct >= 80.0:
+        return conf_pct, "Moderate", "#ca8a04", "🟡"
+    elif conf_pct >= 70.0:
+        return conf_pct, "Low", "#ea580c", "🟠"
+    else:
+        return conf_pct, "Very Low", "#dc2626", "🔴"
+
+
+def get_risk_level(probability: float) -> tuple:
+    """
+    Determine the clinical risk level based on the probability of needing oxygen therapy.
+
+    Args:
+        probability: float, predicted probability for class 1 (Yes).
+
+    Returns:
+        Tuple of (risk_label, risk_color, risk_icon).
+    """
+    prob_pct = probability * 100
+
+    if prob_pct < 30.0:
+        return "Low Risk", "#16a34a", "🟢"
+    elif prob_pct < 50.0:
+        return "Low-Moderate Risk", "#84cc16", "🟢"
+    elif prob_pct < 70.0:
+        return "Moderate Risk", "#ca8a04", "🟡"
+    elif prob_pct <= 90.0:
+        return "High Risk", "#ea580c", "🟠"
+    else:
+        return "Very High Risk", "#dc2626", "🔴"
