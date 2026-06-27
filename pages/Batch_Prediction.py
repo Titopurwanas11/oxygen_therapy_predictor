@@ -8,7 +8,7 @@ import pandas as pd
 import io
 import datetime
 
-from utils.config import ALL_FEATURES, setup_page
+from utils.config import ALL_FEATURES, setup_page, render_page_header, render_section_divider, render_footer, render_empty_state
 from utils.batch_prediction import validate_uploaded_file, run_batch_prediction
 from utils.statistics import calculate_population_stats, generate_population_narrative
 from utils.charts import (
@@ -42,41 +42,16 @@ def st_html(html_str):
 # ─── Custom Layout Styling ───────────────────────────────────────────────────
 st_html("""
 <style>
-    .cdss-card {
-        background: #ffffff;
-        border: 1px solid #e2e8f0;
-        border-radius: 14px;
-        padding: 1.5rem;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-        margin-bottom: 1.25rem;
-    }
-    .section-title-custom {
-        color: #0a2e52;
-        font-weight: 700;
-        font-size: 1.15rem;
-        margin-top: 1.2rem;
-        margin-bottom: 0.8rem;
-        border-left: 4px solid #2563eb;
-        padding-left: 0.6rem;
-    }
+    /* Page-specific overrides only */
 </style>
 """)
 
 # ─── Header ──────────────────────────────────────────────────────────────────
-st_html("""
-<div style="
-    background: linear-gradient(135deg, #0a2e52 0%, #1a4a7a 50%, #2563eb 100%);
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(10, 46, 82, 0.18);
-">
-    <h1 style="margin: 0; color: white; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.3px;">📊 CDSS Population & Batch Analysis</h1>
-    <p style="margin: 0.3rem 0 0 0; color: #93c5fd; font-size: 0.95rem;">
-        Sistem Pendukung Keputusan Klinis untuk Analisis Populasi Terapi Oksigen (Skripsi Demo)
-    </p>
-</div>
-""")
+st_html(render_page_header(
+    "📂",
+    "CDSS Population & Batch Analysis",
+    "Sistem Pendukung Keputusan Klinis untuk Analisis Populasi Terapi Oksigen (Skripsi Demo)"
+))
 
 # ─── SECTION 1: UPLOAD ───────────────────────────────────────────────────────
 st_html("<h3 class=\"section-title-custom\">📁 Section 1: Upload Patient Dataset</h3>")
@@ -185,6 +160,11 @@ if uploaded_file is not None:
                     try:
                         result_df = run_batch_prediction(df_raw)
                         track_batch_prediction()
+                        try:
+                            from utils.monitoring import record_predictions_from_df
+                            record_predictions_from_df(result_df, type="Batch")
+                        except Exception:
+                            pass
                         # Save in session state
                         st.session_state.batch_results = result_df
                         st.session_state.batch_predicted = True
@@ -392,3 +372,14 @@ if uploaded_file is not None:
             with st.expander("ℹ️ Kolom Tambahan (tidak digunakan model)", expanded=False):
                 for col in sorted(extra_cols):
                     st.markdown(f"- `{col}`")
+
+else:
+    # No file uploaded yet — show empty state
+    st_html(render_empty_state(
+        "📂",
+        "Belum Ada File yang Diupload",
+        "Upload file CSV atau XLSX berisi data klinis pasien untuk memulai analisis batch prediction."
+    ))
+
+# ─── Footer ──────────────────────────────────────────────────────────────────
+st_html(render_footer())

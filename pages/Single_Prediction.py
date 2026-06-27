@@ -16,6 +16,9 @@ from utils.config import (
     MULTI_CATEGORICAL_FEATURES,
     ALL_FEATURES,
     setup_page,
+    render_page_header,
+    render_section_divider,
+    render_footer,
 )
 from utils.prediction import predict_single, get_confidence_level, get_risk_level
 from utils.pdf_report import generate_pdf_report
@@ -52,17 +55,6 @@ def st_html(html_str):
 # ─── Custom Layout Styling ───────────────────────────────────────────────────
 st_html("""
 <style>
-    /* Patient overview and layout styles */
-    .section-title-custom {
-        color: #0a2e52;
-        font-weight: 700;
-        font-size: 1.2rem;
-        margin-top: 1.5rem;
-        margin-bottom: 0.8rem;
-        border-left: 4px solid #2563eb;
-        padding-left: 0.6rem;
-    }
-    
     /* Dynamic check list styling */
     .clinical-indicator-list {
         list-style-type: none;
@@ -74,20 +66,11 @@ st_html("""
 """)
 
 # ─── Header ──────────────────────────────────────────────────────────────────
-st_html("""
-<div style="
-    background: linear-gradient(135deg, #0a2e52 0%, #1a4a7a 50%, #2563eb 100%);
-    border-radius: 16px;
-    padding: 2rem 2.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 24px rgba(10, 46, 82, 0.18);
-">
-    <h1 style="margin: 0; color: white; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.3px;">🩺 CDSS Single Patient Prediction</h1>
-    <p style="margin: 0.3rem 0 0 0; color: #93c5fd; font-size: 0.95rem;">
-        Sistem Pendukung Keputusan Klinis untuk Prediksi Oksigen Terapi (Skripsi Demo)
-    </p>
-</div>
-""")
+st_html(render_page_header(
+    "🩺",
+    "CDSS Single Patient Prediction",
+    "Sistem Pendukung Keputusan Klinis untuk Prediksi Oksigen Terapi (Skripsi Demo)"
+))
 
 # ─── Session State Initialization ────────────────────────────────────────────
 # Initialize session state for all inputs with their defaults if not present
@@ -448,6 +431,20 @@ if predict_clicked:
                 risk_color_rgb = (22, 163, 74)
                 risk_bg = "#f0fdf4"
                 risk_border = "#bbf7d0"
+
+            # Save to prediction history file
+            try:
+                from utils.monitoring import record_prediction
+                conf_pct = prob_yes * 100 if label == "Yes" else (1.0 - prob_yes) * 100
+                record_prediction(
+                    age=patient_data.get("Age (months)", 0),
+                    prediction=label,
+                    confidence=conf_pct,
+                    risk_level=risk_level,
+                    type="Single"
+                )
+            except Exception:
+                pass
 
             # Compute SHAP and AI Clinical Summary narrative upfront
             shap_ok = False
@@ -1171,3 +1168,6 @@ if predict_clicked:
 
         except Exception as e:
             st.error(f"❌ Terjadi kesalahan saat melakukan prediksi: {str(e)}")
+
+# ─── Footer ──────────────────────────────────────────────────────────────────
+st_html(render_footer())
