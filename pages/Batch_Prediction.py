@@ -27,8 +27,8 @@ from utils.session_analytics import (
 )
 
 
-st.set_page_config(page_title="Batch Analysis — OxyPredict", page_icon="assets/favicon-64x64.png", layout="wide")
-setup_page("Batch Analysis — OxyPredict")
+st.set_page_config(page_title="Prediksi Massal — OxyPredict", page_icon="assets/favicon-64x64.png", layout="wide")
+setup_page("Prediksi Massal — OxyPredict")
 init_analytics_state()
 
 
@@ -49,12 +49,12 @@ st_html("""
 # ─── Header ──────────────────────────────────────────────────────────────────
 st_html(render_page_header(
     "📂",
-    "CDSS Population & Batch Analysis",
-    "Sistem Pendukung Keputusan Klinis untuk Analisis Populasi Terapi Oksigen (Skripsi Demo)"
+    "Prediksi Massal Pasien",
+    "Sistem Pendukung Keputusan Klinis untuk Analisis Kebutuhan Terapi Oksigen pada Populasi Pasien."
 ))
 
 # ─── SECTION 1: UPLOAD ───────────────────────────────────────────────────────
-st_html("<h3 class=\"section-title-custom\">📁 Section 1: Upload Patient Dataset</h3>")
+st_html("<h3 class=\"section-title-custom\">📁 Bagian 1: Unggah Data Pasien</h3>")
 
 col_upload_left, col_upload_right = st.columns([3, 2])
 
@@ -67,15 +67,15 @@ with col_upload_left:
 
 with col_upload_right:
     st_html("""
-    <div class="cdss-card" style="background-color: #F8FAFC; border-color: #D6E4F0; border-color: #D6E4F0; height: 100%; min-height: 140px; padding: 1.1rem 1.4rem;">
-        <h5 style="margin: 0 0 0.5rem 0; color: #1E293B; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Supported Format</h5>
+    <div class="cdss-card" style="background-color: #F8FAFC; border-color: #D6E4F0; height: 100%; min-height: 140px; padding: 1.1rem 1.4rem;">
+        <h5 style="margin: 0 0 0.5rem 0; color: #1E293B; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Format yang Didukung</h5>
         <div style="display: flex; gap: 0.5rem; margin-bottom: 0.6rem;">
             <span style="background-color: #3282B8; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">CSV</span>
             <span style="background-color: #14B8A6; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">Excel (.xlsx)</span>
         </div>
         <div style="font-size: 0.8rem; color: #64748B; line-height: 1.4;">
-            <strong>Required Fitur:</strong> 44 Fitur Klinis Pasien<br>
-            <strong>Dataset Validasi:</strong> Otomatis oleh Sistem
+            <strong>Parameter yang Dibutuhkan:</strong> 44 Fitur Klinis Pasien<br>
+            <strong>Validasi Data:</strong> Otomatis oleh Sistem
         </div>
     </div>
     """)
@@ -99,8 +99,8 @@ if uploaded_file is not None:
     if uploaded_file.size > max_size:
         from utils.config import show_error_card
         show_error_card(
-            "Uploaded file exceeds maximum allowed size.",
-            "Ukuran file maksimal yang diperbolehkan adalah 50 MB. Silakan kompresi file Anda atau bagi menjadi beberapa bagian."
+            "Ukuran Berkas Melebihi Batas Maksimum",
+            "Ukuran berkas maksimal yang diperbolehkan adalah 50 MB. Silakan kompres berkas Anda atau bagi menjadi beberapa bagian."
         )
         st.stop()
 
@@ -122,8 +122,8 @@ if uploaded_file is not None:
     if len(df_raw) == 0:
         from utils.config import show_warning_card
         show_warning_card(
-            "No patient records were found.",
-            "Dataset yang diunggah kosong. Pastikan file Anda berisi baris data pasien."
+            "Data Pasien Tidak Ditemukan",
+            "Berkas yang diunggah kosong. Pastikan berkas Anda berisi baris data pasien."
         )
         st.stop()
 
@@ -133,8 +133,8 @@ if uploaded_file is not None:
         duplicate_cols = list(set([col for col in df_raw.columns if list(df_raw.columns).count(col) > 1]))
         from utils.config import show_warning_card
         show_warning_card(
-            "Duplicate Columns Found",
-            "Dataset Anda mengandung kolom duplikat berikut:<br>• " + "<br>• ".join(duplicate_cols) + "<br><br>Perbaiki file Anda dan coba lagi."
+            "Kolom Duplikat Ditemukan",
+            "Data Anda mengandung kolom duplikat berikut:<br>• " + "<br>• ".join(duplicate_cols) + "<br><br>Perbaiki berkas Anda dan coba lagi."
         )
         st.stop()
 
@@ -172,8 +172,8 @@ if uploaded_file is not None:
     if null_cols:
         from utils.config import show_warning_card
         show_warning_card(
-            "Missing Values Detected",
-            "Dataset mengandung data kosong pada kolom berikut:<br>• " + "<br>• ".join(null_cols) + "<br><br>Lengkapi nilai kosong sebelum memproses prediksi."
+            "Data Tidak Lengkap Terdeteksi",
+            "Data pasien mengandung nilai kosong pada kolom berikut:<br>• " + "<br>• ".join(null_cols) + "<br><br>Lengkapi nilai kosong sebelum memproses prediksi."
         )
         st.stop()
         
@@ -184,23 +184,23 @@ if uploaded_file is not None:
             invalid_desc.append(f"Kolom '{col}': Nilai {vals} tidak valid (Pilihan: {allowed})")
         from utils.config import show_warning_card
         show_warning_card(
-            "Invalid Categorical Values",
-            "• " + "<br>• ".join(invalid_desc) + "<br><br>Sesuaikan nilai kategori dengan ketentuan."
+            "Nilai Kategori Tidak Valid",
+            "• " + "<br>• ".join(invalid_desc) + "<br><br>Sesuaikan nilai kategori sesuai ketentuan template OxyPredict."
         )
         st.stop()
 
     v1, v2, v3, v4, v5 = st.columns(5)
     
     with v1:
-        st.metric("👥 Patients Count", len(df_raw))
+        st.metric("👥 Jumlah Pasien", len(df_raw))
     with v2:
-        st.metric("📋 Columns Count", len(df_raw.columns))
+        st.metric("📋 Jumlah Kolom", len(df_raw.columns))
     with v3:
-        st.metric("Missing Columns", len(missing_cols), delta=None, delta_color="inverse")
+        st.metric("Kolom Tidak Ditemukan", len(missing_cols), delta=None, delta_color="inverse")
     with v4:
-        st.metric("Extra Columns", len(extra_cols))
+        st.metric("Kolom Tambahan", len(extra_cols))
     with v5:
-        st.metric("Ready for Prediction", "Yes" if is_valid else "No")
+        st.metric("Siap Diproses", "Ya" if is_valid else "Tidak")
 
     st.markdown("")
 
@@ -213,13 +213,13 @@ if uploaded_file is not None:
 
         st.markdown("")
 
-        # ─── SECTION 3: RUN PREDICTION ──────────────────────────────────────
-        st_html("<h3 class=\"section-title-custom\">🔮 Section 3: Population Diagnostics</h3>")
+        # ─── SECTION 3: JALANKAN PREDIKSI ────────────────────────────────────
+        st_html("<h3 class=\"section-title-custom\">🔮 Bagian 3: Proses Prediksi Massal</h3>")
         
         col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
         with col_btn_c:
             predict_all = st.button(
-                "🔮 Predict All Patients",
+                "🔮 Mulai Prediksi Semua Pasien",
                 use_container_width=True,
                 type="primary"
             )
@@ -227,7 +227,7 @@ if uploaded_file is not None:
         if predict_all or st.session_state.get("batch_predicted", False):
             # Maintain state so prediction results don't vanish on UI interaction
             if predict_all or "batch_results" not in st.session_state:
-                with st.spinner("Running Random Forest Model..."):
+                with st.spinner("Memproses Model Prediksi Klinis..."):
                     try:
                         from utils.prediction import ModelLoadError
                         result_df = run_batch_prediction(df_raw)
@@ -243,22 +243,22 @@ if uploaded_file is not None:
                         
                         from utils.config import show_success_card
                         show_success_card(
-                            "Batch Prediction Completed Successfully",
-                            f"Berhasil memproses analisis klasifikasi medis untuk {len(result_df)} pasien."
+                            "Prediksi Massal Berhasil Dilakukan",
+                            f"Berhasil memproses analisis klinis untuk {len(result_df)} pasien."
                         )
                     except ModelLoadError:
                         from utils.config import show_error_card
                         show_error_card(
-                            "❌ Model Machine Learning tidak dapat dimuat",
-                            "Possible causes:<br>• File model tidak ditemukan.<br>• Model rusak.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+                            "Model Prediksi Tidak Dapat Dimuat",
+                            "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
                         )
                         st.stop()
                     except Exception as pred_err:
                         from utils.config import logger, show_error_card
                         logger.error("Batch prediction failed: %s", str(pred_err), exc_info=True)
                         show_error_card(
-                            "Prediction Failed",
-                            "Sistem tidak dapat melakukan prediksi karena terjadi gangguan internal. Hubungi tim IT atau administrator sistem."
+                            "Prediksi Gagal Diproses",
+                            "Sistem tidak dapat melakukan prediksi karena terjadi gangguan internal. Silakan hubungi administrator sistem."
                         )
                         st.stop()
 
@@ -269,71 +269,71 @@ if uploaded_file is not None:
 
             st.markdown("---")
 
-            # ─── SECTION 4: POPULATION SUMMARY ───────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">📊 Section 4: Population Summary Metrics</h3>")
+            # ─── SECTION 4: RINGKASAN HASIL ───────────────────────────────────
+            st_html("<h3 class=\"section-title-custom\">📊 Bagian 4: Ringkasan Hasil Prediksi Populasi</h3>")
             
             m1, m2, m3, m4 = st.columns(4)
-            m1.metric("Total Patients", f"{stats['total_patients']}")
-            m2.metric("Patients Need Oxygen", f"{stats['need_oxy']}", f"{stats['need_oxy_pct']:.1f}%", delta_color="inverse")
-            m3.metric("Patients Without Oxygen", f"{stats['no_oxy']}")
-            m4.metric("Average Probability", f"{stats['avg_probability']:.1f}%")
+            m1.metric("Total Pasien", f"{stats['total_patients']}")
+            m2.metric("Membutuhkan Oksigen", f"{stats['need_oxy']}", f"{stats['need_oxy_pct']:.1f}%", delta_color="inverse")
+            m3.metric("Tidak Membutuhkan Oksigen", f"{stats['no_oxy']}")
+            m4.metric("Rata-rata Probabilitas", f"{stats['avg_probability']:.1f}%")
 
             m5, m6, m7 = st.columns(3)
-            m5.metric("High Risk Patients", f"{stats['high_risk']}")
-            m6.metric("Medium Risk Patients", f"{stats['med_risk']}")
-            m7.metric("Low Risk Patients", f"{stats['low_risk']}")
+            m5.metric("Pasien Risiko Tinggi", f"{stats['high_risk']}")
+            m6.metric("Pasien Risiko Sedang", f"{stats['med_risk']}")
+            m7.metric("Pasien Risiko Rendah", f"{stats['low_risk']}")
 
             st.markdown("")
 
             # ─── SECTION 5: VISUALIZATION ────────────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">📈 Section 5: Graphical Analytics Dashboard</h3>")
+            st_html("<h3 class=\"section-title-custom\">📈 Bagian 5: Grafik Analitik Populasi</h3>")
             
             v_col1, v_col2 = st.columns(2)
             with v_col1:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Oxygen Therapy Need Ratio</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Rasio Kebutuhan Terapi Oksigen</h4>")
                 st.plotly_chart(create_pie_chart(result_df), use_container_width=True)
                 st_html("</div>")
             with v_col2:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Risk Level Distribution</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Distribusi Tingkat Risiko</h4>")
                 st.plotly_chart(create_risk_distribution_chart(result_df), use_container_width=True)
                 st_html("</div>")
 
             v_col3, v_col4 = st.columns(2)
             with v_col3:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Prediction Probability Distribution Histogram</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Histogram Distribusi Probabilitas Prediksi</h4>")
                 st.plotly_chart(create_probability_histogram(result_df), use_container_width=True)
                 st_html("</div>")
             with v_col4:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Average Probability per Risk Level</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Rata-rata Probabilitas per Tingkat Risiko</h4>")
                 st.plotly_chart(create_avg_prob_per_risk_chart(result_df), use_container_width=True)
                 st_html("</div>")
 
-            # ─── SECTION 7: POPULATION CLINICAL SUMMARY ──────────────────────
-            st_html("<h3 class=\"section-title-custom\">🩺 Section 6: Population Clinical Interpretation</h3>")
+            # ─── SECTION 6: RINGKASAN KLINIS POPULASI ────────────────────────
+            st_html("<h3 class=\"section-title-custom\">🩺 Bagian 6: Interpretasi Klinis Populasi</h3>")
             
             st_html(f"""
             <div class="cdss-card" style="border-left: 6px solid #3282B8;">
-                <h4 style="margin: 0 0 0.8rem 0; color: #0F4C75; font-weight: 700; font-size: 18px;">CDSS Population Narrative Summary</h4>
+                <h4 style="margin: 0 0 0.8rem 0; color: #0F4C75; font-weight: 700; font-size: 18px;">Ringkasan Klinis Populasi</h4>
                 <p style="margin: 0; color: #1E293B; font-size: 16px; line-height: 1.7; text-align: justify;">
                     {narrative}
                 </p>
             </div>
             """)
 
-            # ─── SECTION 6: INTERACTIVE TABLE & SEARCH & FILTER ──────────────
-            st_html("<h3 class=\"section-title-custom\">📋 Section 7: Enriched Patient Dataset & Query Filters</h3>")
+            # ─── SECTION 7: TABEL INTERAKTIF & FILTER ────────────────────────
+            st_html("<h3 class=\"section-title-custom\">📋 Bagian 7: Data Pasien & Filter Pencarian</h3>")
             
             # Filters block
-            st_html("<div class=\"cdss-card\" style=\"background-color: #F8FAFC; border-color: #D6E4F0;\"><h5 style=\"margin:0 0 1rem 0; font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;\">FILTER CRITERIA</h5>")
+            st_html("<div class=\"cdss-card\" style=\"background-color: #F8FAFC; border-color: #D6E4F0;\"><h5 style=\"margin:0 0 1rem 0; font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;\">KRITERIA FILTER</h5>")
             f1, f2, f3, f4 = st.columns(4)
             with f1:
-                filter_pred = st.selectbox("Prediction", ["All", "Yes", "No"])
+                filter_pred = st.selectbox("Hasil Prediksi", ["Semua", "Yes", "No"])
             with f2:
-                filter_risk = st.selectbox("Risk Level", ["All", "Low Risk", "Low-Moderate Risk", "Moderate Risk", "High Risk", "Very High Risk"])
+                filter_risk = st.selectbox("Tingkat Risiko", ["Semua", "Low Risk", "Low-Moderate Risk", "Moderate Risk", "High Risk", "Very High Risk"])
             with f3:
-                min_prob, max_prob = st.slider("Probability Range (%)", 0.0, 100.0, (0.0, 100.0))
+                min_prob, max_prob = st.slider("Rentang Probabilitas (%)", 0.0, 100.0, (0.0, 100.0))
             with f4:
-                search_query = st.text_input("Search Patient ID", "")
+                search_query = st.text_input("Cari ID Pasien", "")
             st_html("</div>")
 
             # Apply filters
@@ -343,9 +343,9 @@ if uploaded_file is not None:
             if "Patient ID" not in filtered_df.columns:
                 filtered_df.insert(0, "Patient ID", [f"Patient #{i+1}" for i in range(len(filtered_df))])
 
-            if filter_pred != "All":
+            if filter_pred != "Semua":
                 filtered_df = filtered_df[filtered_df["Prediction"] == filter_pred]
-            if filter_risk != "All":
+            if filter_risk != "Semua":
                 filtered_df = filtered_df[filtered_df["Risk Level"] == filter_risk]
             
             filtered_df = filtered_df[(filtered_df["Probability"] >= min_prob) & (filtered_df["Probability"] <= max_prob)]
@@ -379,8 +379,8 @@ if uploaded_file is not None:
 
             st.markdown("")
 
-            # ─── SECTION 11: EXPORTS ─────────────────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">💾 Section 8: Download & Export Reports</h3>")
+            # ─── SECTION 8: UNDUH LAPORAN ─────────────────────────────────────
+            st_html("<h3 class=\"section-title-custom\">💾 Bagian 8: Unduh Laporan Prediksi</h3>")
             
             dl1, dl2, dl3 = st.columns(3)
 
@@ -395,16 +395,16 @@ if uploaded_file is not None:
                 from utils.config import logger, show_warning_card
                 logger.error("Excel batch export failed: %s", str(excel_err), exc_info=True)
                 show_warning_card(
-                    "Unable to Export Results",
-                    "Gagal mengekspor data ke Excel. Pastikan file tidak sedang dibuka oleh aplikasi lain atau terkunci."
+                    "Ekspor Data Gagal",
+                    "Gagal mengekspor data ke Excel. Pastikan berkas tidak sedang dibuka oleh aplikasi lain atau terkunci."
                 )
 
             with dl1:
                 if excel_ok:
                     st.download_button(
-                        label="📥 Download Excel Clinical Data",
+                        label="📥 Unduh File Excel",
                         data=excel_buffer,
-                        file_name=f"OxyPredict_Batch_Export_{datetime.date.today()}.xlsx",
+                        file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                         use_container_width=True,
                         on_click=track_excel_download,
@@ -414,9 +414,9 @@ if uploaded_file is not None:
             csv_buffer = final_df.to_csv(index=False).encode("utf-8")
             with dl2:
                 st.download_button(
-                    label="📥 Download CSV Dataset",
+                    label="📥 Unduh File CSV",
                     data=csv_buffer,
-                    file_name=f"OxyPredict_Batch_Export_{datetime.date.today()}.csv",
+                    file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.csv",
                     mime="text/csv",
                     use_container_width=True,
                     on_click=track_csv_download,
@@ -430,14 +430,14 @@ if uploaded_file is not None:
                 from utils.config import logger, show_error_card
                 logger.error("Batch PDF generation failed: %s", str(pdf_err), exc_info=True)
                 show_error_card(
-                    "Failed to Generate Report",
-                    "Gagal membuat PDF Report. Silakan coba kembali beberapa saat lagi."
+                    "Laporan PDF Gagal Dibuat",
+                    "Gagal membuat Laporan PDF. Silakan coba kembali beberapa saat lagi."
                 )
 
             with dl3:
                 if pdf_report_bytes:
                     st.download_button(
-                        label="📄 Download Batch Clinical Report (PDF)",
+                        label="📄 Unduh Laporan PDF",
                         data=pdf_report_bytes,
                         file_name=f"OxyPredict_Batch_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                         mime="application/pdf",
@@ -464,8 +464,8 @@ else:
     # No file uploaded yet — show empty state
     st_html(render_empty_state(
         "📂",
-        "Belum Ada File yang Diupload",
-        "Upload file CSV atau XLSX berisi data klinis pasien untuk memulai analisis batch prediction."
+        "Belum Ada Berkas yang Diunggah",
+        "Unggah berkas CSV atau XLSX berisi data klinis pasien untuk memulai prediksi massal."
     ))
 
 # ─── Footer ──────────────────────────────────────────────────────────────────

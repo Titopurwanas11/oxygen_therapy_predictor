@@ -14,7 +14,7 @@ def create_pie_chart(df: pd.DataFrame):
     counts_dict = df["Prediction"].value_counts().to_dict()
     status_order = ["Yes", "No"]
     counts = pd.DataFrame([
-        {"Status": "Need Oxygen" if status == "Yes" else "No Oxygen", "Count": counts_dict.get(status, 0)}
+        {"Status": "Butuh Oksigen" if status == "Yes" else "Tidak Butuh Oksigen", "Count": counts_dict.get(status, 0)}
         for status in status_order
     ])
 
@@ -23,7 +23,7 @@ def create_pie_chart(df: pd.DataFrame):
         names="Status",
         values="Count",
         color="Status",
-        color_discrete_map={"Need Oxygen": "#EF4444", "No Oxygen": "#22C55E"},
+        color_discrete_map={"Butuh Oksigen": "#EF4444", "Tidak Butuh Oksigen": "#22C55E"},
         hole=0.4,
     )
     fig.update_layout(
@@ -40,27 +40,27 @@ def create_risk_distribution_chart(df: pd.DataFrame):
     """
     def map_risk(risk):
         if risk in ["Low Risk", "Low-Moderate Risk"]:
-            return "Low"
+            return "Rendah"
         if risk in ["Moderate Risk", "Medium Risk"]:
-            return "Medium"
-        return "High"
+            return "Sedang"
+        return "Tinggi"
 
     mapped_risks = df["Risk Level"].apply(map_risk)
     counts_dict = mapped_risks.value_counts().to_dict()
     
-    risk_order = ["Low", "Medium", "High"]
+    risk_order = ["Rendah", "Sedang", "Tinggi"]
     risks = pd.DataFrame([
-        {"Risk Level": rsk, "Count": counts_dict.get(rsk, 0)}
+        {"Tingkat Risiko": rsk, "Count": counts_dict.get(rsk, 0)}
         for rsk in risk_order
     ])
 
     fig = px.bar(
         risks,
-        x="Risk Level",
+        x="Tingkat Risiko",
         y="Count",
-        color="Risk Level",
-        color_discrete_map={"Low": "#22C55E", "Medium": "#F59E0B", "High": "#EF4444"},
-        category_orders={"Risk Level": ["Low", "Medium", "High"]}
+        color="Tingkat Risiko",
+        color_discrete_map={"Rendah": "#22C55E", "Sedang": "#F59E0B", "Tinggi": "#EF4444"},
+        category_orders={"Tingkat Risiko": ["Rendah", "Sedang", "Tinggi"]}
     )
     fig.update_layout(
         margin=dict(t=30, b=10, l=10, r=10),
@@ -83,7 +83,7 @@ def create_probability_histogram(df: pd.DataFrame):
         x="Probability",
         nbins=20,
         color_discrete_sequence=["#3282B8"],
-        labels={"Probability": "Prediction Probability (%)"}
+        labels={"Probability": "Probabilitas Prediksi (%)"}
     )
     fig.update_layout(
         margin=dict(t=30, b=10, l=10, r=10),
@@ -103,29 +103,29 @@ def create_avg_prob_per_risk_chart(df: pd.DataFrame):
     """
     def map_risk(risk):
         if risk in ["Low Risk", "Low-Moderate Risk"]:
-            return "Low"
+            return "Rendah"
         if risk in ["Moderate Risk", "Medium Risk"]:
-            return "Medium"
-        return "High"
+            return "Sedang"
+        return "Tinggi"
 
     temp_df = df.copy()
-    temp_df["Risk Group"] = temp_df["Risk Level"].apply(map_risk)
+    temp_df["Kelompok Risiko"] = temp_df["Risk Level"].apply(map_risk)
 
-    avg_probs_dict = temp_df.groupby("Risk Group")["Probability"].mean().to_dict()
+    avg_probs_dict = temp_df.groupby("Kelompok Risiko")["Probability"].mean().to_dict()
     
-    risk_order = ["Low", "Medium", "High"]
+    risk_order = ["Rendah", "Sedang", "Tinggi"]
     avg_probs = pd.DataFrame([
-        {"Risk Group": rsk, "Average Probability (%)": avg_probs_dict.get(rsk, 0.0)}
+        {"Kelompok Risiko": rsk, "Rata-rata Probabilitas (%)": avg_probs_dict.get(rsk, 0.0)}
         for rsk in risk_order
     ])
 
     fig = px.bar(
         avg_probs,
-        x="Risk Group",
-        y="Average Probability (%)",
-        color="Risk Group",
-        color_discrete_map={"Low": "#22C55E", "Medium": "#F59E0B", "High": "#EF4444"},
-        category_orders={"Risk Group": ["Low", "Medium", "High"]}
+        x="Kelompok Risiko",
+        y="Rata-rata Probabilitas (%)",
+        color="Kelompok Risiko",
+        color_discrete_map={"Rendah": "#22C55E", "Sedang": "#F59E0B", "Tinggi": "#EF4444"},
+        category_orders={"Kelompok Risiko": ["Rendah", "Sedang", "Tinggi"]}
     )
     fig.update_layout(
         margin=dict(t=30, b=10, l=10, r=10),
@@ -143,27 +143,34 @@ def create_confidence_histogram(df: pd.DataFrame):
     """
     Create a Bar Chart showing the count of patients in each confidence category.
     """
-    levels_order = ["Very High", "High", "Moderate", "Low", "Very Low"]
-    counts_dict = df["Confidence Level"].value_counts().to_dict()
+    levels_order = ["Sangat Tinggi", "Tinggi", "Sedang", "Rendah", "Sangat Rendah"]
+    mapping = {
+        "Very High": "Sangat Tinggi",
+        "High": "Tinggi",
+        "Moderate": "Sedang",
+        "Low": "Rendah",
+        "Very Low": "Sangat Rendah"
+    }
+    counts_dict = df["Confidence Level"].map(mapping).value_counts().to_dict()
     
     counts = pd.DataFrame([
-        {"Confidence Level": lvl, "Count": counts_dict.get(lvl, 0)}
+        {"Tingkat Keyakinan": lvl, "Count": counts_dict.get(lvl, 0)}
         for lvl in levels_order
     ])
 
     fig = px.bar(
         counts,
-        x="Confidence Level",
+        x="Tingkat Keyakinan",
         y="Count",
-        color="Confidence Level",
+        color="Tingkat Keyakinan",
         color_discrete_map={
-            "Very High": "#15803D",
-            "High": "#22C55E",
-            "Moderate": "#F59E0B",
-            "Low": "#EA580C",
-            "Very Low": "#EF4444"
+            "Sangat Tinggi": "#15803D",
+            "Tinggi": "#22C55E",
+            "Sedang": "#F59E0B",
+            "Rendah": "#EA580C",
+            "Sangat Rendah": "#EF4444"
         },
-        category_orders={"Confidence Level": levels_order}
+        category_orders={"Tingkat Keyakinan": levels_order}
     )
     fig.update_layout(
         margin=dict(t=30, b=10, l=10, r=10),
@@ -214,7 +221,7 @@ def create_prediction_ratio_donut(df: pd.DataFrame):
     counts_dict = df["Prediction"].value_counts().to_dict()
     status_order = ["Yes", "No"]
     counts = pd.DataFrame([
-        {"Status": "Need Oxygen" if status == "Yes" else "No Oxygen", "Count": counts_dict.get(status, 0)}
+        {"Status": "Butuh Oksigen" if status == "Yes" else "Tidak Butuh Oksigen", "Count": counts_dict.get(status, 0)}
         for status in status_order
     ])
 

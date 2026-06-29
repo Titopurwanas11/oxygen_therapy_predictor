@@ -201,9 +201,9 @@ def generate_batch_pdf_report(
 
     header_left = [
         Paragraph("🫁 OxyPredict", style_title),
-        Paragraph("Clinical Decision Support System", style_subtitle),
+        Paragraph("Sistem Dukungan Keputusan Klinis", style_subtitle),
         Spacer(1, 2),
-        Paragraph("Batch Clinical Report", ParagraphStyle("HeaderBCR", parent=style_body_bold, textColor=HexColor("#1e40af"))),
+        Paragraph("Laporan Klinis Massal", ParagraphStyle("HeaderBCR", parent=style_body_bold, textColor=HexColor("#1e40af"))),
     ]
 
     header_right = [
@@ -231,25 +231,25 @@ def generate_batch_pdf_report(
     # ─────────────────────────────────────────────────────────────────────────
     summary_rows = [
         [
-            Paragraph("<b>Total Patients</b>", style_body),
+            Paragraph("<b>Total Pasien</b>", style_body),
             Paragraph(str(stats["total_patients"]), style_body_bold),
-            Paragraph("<b>Low Risk Patients</b>", style_body),
+            Paragraph("<b>Pasien Risiko Rendah</b>", style_body),
             Paragraph(str(stats["low_risk"]), style_body_bold),
         ],
         [
-            Paragraph("<b>Need Oxygen</b>", style_body),
+            Paragraph("<b>Butuh Oksigen</b>", style_body),
             Paragraph(f"<font color='#dc2626'><b>{stats['need_oxy']} ({stats['need_oxy_pct']:.1f}%)</b></font>", style_body),
-            Paragraph("<b>Medium Risk Patients</b>", style_body),
+            Paragraph("<b>Pasien Risiko Sedang</b>", style_body),
             Paragraph(str(stats["med_risk"]), style_body_bold),
         ],
         [
-            Paragraph("<b>No Oxygen</b>", style_body),
+            Paragraph("<b>Tidak Butuh Oksigen</b>", style_body),
             Paragraph(f"<font color='#16a34a'><b>{stats['no_oxy']}</b></font>", style_body),
-            Paragraph("<b>High Risk Patients</b>", style_body),
+            Paragraph("<b>Pasien Risiko Tinggi</b>", style_body),
             Paragraph(f"<font color='#dc2626'><b>{stats['high_risk']}</b></font>", style_body),
         ],
         [
-            Paragraph("<b>Average Probability</b>", style_body),
+            Paragraph("<b>Rata-rata Probabilitas</b>", style_body),
             Paragraph(f"<b>{stats['avg_probability']:.1f}%</b>", style_body_bold),
             "", ""
         ]
@@ -266,7 +266,7 @@ def generate_batch_pdf_report(
         ("SPAN", (2, 3), (3, 3)),
     ]))
 
-    story.append(Paragraph("📊 Dataset & Prediction Summary", style_section_heading))
+    story.append(Paragraph("📊 Ringkasan Data & Prediksi", style_section_heading))
     story.append(summary_table)
     story.append(Spacer(1, 10))
 
@@ -287,7 +287,7 @@ def generate_batch_pdf_report(
         ("RIGHTPADDING", (0, 0), (-1, -1), 12),
     ]))
 
-    story.append(Paragraph("🩺 Clinical Interpretation", style_section_heading))
+    story.append(Paragraph("🩺 Interpretasi Klinis", style_section_heading))
     story.append(summary_box)
     story.append(Spacer(1, 10))
 
@@ -342,7 +342,7 @@ def generate_batch_pdf_report(
         ("BOTTOMPADDING", (0, 0), (-1, -1), 4),
     ]))
 
-    story.append(Paragraph("📋 Top 10 High Risk Patients", style_section_heading))
+    story.append(Paragraph("📋 10 Pasien Risiko Tinggi Teratas", style_section_heading))
     story.append(top_table)
     story.append(Spacer(1, 10))
 
@@ -353,7 +353,7 @@ def generate_batch_pdf_report(
     bar_drawing = draw_bar_chart(stats["low_risk"], stats["med_risk"], stats["high_risk"])
 
     charts_row = [
-        [Paragraph("<b>Need vs No Need O₂ Distribution</b>", style_subtitle), Paragraph("<b>Risk Category Distribution</b>", style_subtitle)],
+        [Paragraph("<b>Distribusi Pasien Butuh O₂ vs Tidak Butuh O₂</b>", style_subtitle), Paragraph("<b>Distribusi Kategori Risiko</b>", style_subtitle)],
         [pie_drawing, bar_drawing]
     ]
     charts_table = Table(charts_row, colWidths=[252, 252])
@@ -376,9 +376,9 @@ def generate_batch_pdf_report(
     # DISCLAIMER
     # ─────────────────────────────────────────────────────────────────────────
     disclaimer_text = (
-        "<b>Clinical Recommendation CDSS Note:</b><br/>"
-        "Clinical recommendations are generated using predefined clinical decision rules based on the model prediction and selected patient characteristics. "
-        "These recommendations are intended to support healthcare professionals and should not replace physician judgment, institutional protocols, or clinical examination."
+        "<b>Catatan Rekomendasi Klinis:</b><br/>"
+        "Rekomendasi klinis disusun menggunakan aturan keputusan yang ditetapkan berdasarkan hasil prediksi model dan karakteristik pasien. "
+        "Rekomendasi ini dimaksudkan untuk mendukung tenaga kesehatan dan tidak menggantikan penilaian dokter, protokol rumah sakit, atau pemeriksaan klinis."
     )
     disclaimer_box = Table([[Paragraph(disclaimer_text, style_body)]], colWidths=[504])
     disclaimer_box.setStyle(TableStyle([

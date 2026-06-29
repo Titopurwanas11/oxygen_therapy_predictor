@@ -69,8 +69,8 @@ st_html("""
 # ─── Header ──────────────────────────────────────────────────────────────────
 st_html(render_page_header(
     "🩺",
-    "CDSS Single Patient Prediction",
-    "Sistem Pendukung Keputusan Klinis untuk Prediksi Oksigen Terapi (Skripsi Demo)"
+    "Prediksi Pasien",
+    "Sistem Pendukung Keputusan Klinis untuk Prediksi Kebutuhan Terapi Oksigen pada Pasien."
 ))
 
 # ─── Session State Initialization ────────────────────────────────────────────
@@ -107,7 +107,7 @@ header_placeholder = st.empty()
 alerts_placeholder = st.empty()
 
 # ─── Patient Input Form ──────────────────────────────────────────────────────
-st_html("<h3 class=\"section-title-custom\">📋 Patient Clinical Input Form</h3>")
+st_html("<h3 class=\"section-title-custom\">📋 Formulir Data Klinis Pasien</h3>")
 
 patient_data = {}
 tab_names = list(FEATURE_GROUPS.keys())
@@ -215,32 +215,32 @@ alerts = []
 if sao2 < 90:
     alerts.append({
         "type": "danger",
-        "title": "🚨 Severe Hypoxemia",
-        "desc": f"Oxygen saturation (SaO2) is dangerously low at <strong>{sao2:.1f}%</strong>. Immediate oxygenation is critical."
+        "title": "🚨 Hipoksemia Berat",
+        "desc": f"Saturasi oksigen (SaO2) sangat rendah pada <strong>{sao2:.1f}%</strong>. Pemberian oksigen segera sangat diperlukan."
     })
 if is_tachypnea:
     alerts.append({
         "type": "warning",
-        "title": "⚠️ Tachypnea Detected",
-        "desc": f"Respiratory rate is elevated at <strong>{rr} bpm</strong> for a patient of age {age_months} months. Indicative of breathing distress."
+        "title": "⚠️ Takipnea Terdeteksi",
+        "desc": f"Laju pernapasan meningkat pada <strong>{rr} bpm</strong> untuk pasien usia {age_months} bulan. Menunjukkan distres pernapasan."
     })
 if temp > 38.5:
     alerts.append({
         "type": "warning",
-        "title": "🌡️ High Fever",
-        "desc": f"Patient's axillary temperature is elevated at <strong>{temp:.1f}°C</strong>, indicating significant fever."
+        "title": "🌡️ Demam Tinggi",
+        "desc": f"Suhu aksila pasien meningkat pada <strong>{temp:.1f}°C</strong>, menunjukkan demam signifikan."
     })
 if wheezing == "Yes":
     alerts.append({
         "type": "info",
-        "title": "🫁 Wheezing Present",
-        "desc": "Adventitious breath sound detected. Indicates airway obstruction or bronchial spasm."
+        "title": "🫁 Wheezing Terdengar",
+        "desc": "Suara napas tambahan terdeteksi. Mengindikasikan obstruksi saluran napas atau bronkospasme."
     })
 if nasal_flaring == "Yes":
     alerts.append({
         "type": "warning",
-        "title": "⚠️ Respiratory Distress Sign",
-        "desc": "Nasal flaring observed, indicating increased work of breathing and accessory muscle use."
+        "title": "⚠️ Tanda Distres Pernapasan",
+        "desc": "Napas cuping hidung terdeteksi, menunjukkan peningkatan usaha bernapas dan penggunaan otot bantu pernapasan."
     })
 
 # ─── Render Reactive Header, Tracker & Alerts placeholders ──────────────────
@@ -249,28 +249,28 @@ with header_placeholder.container():
     <div class="cdss-card">
         <h4 style="margin: 0 0 1rem 0; color: #0F172A; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 0.5rem;">
             <span class="material-symbols-outlined" style="font-size: 22px; color: #2563EB; vertical-align: middle;">person</span>
-            Patient Overview
+            Ikhtisar Pasien
         </h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem;">
             <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Age</div>
-                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{age_months} months</div>
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Usia</div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{age_months} bulan</div>
             </div>
             <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Gender</div>
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Jenis Kelamin</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{gender}</div>
             </div>
             <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Weight</div>
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Berat Badan</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{weight:.1f} Kg</div>
             </div>
             <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9;">
-                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Height</div>
+                <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">Tinggi Badan</div>
                 <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{height:.1f} cm</div>
             </div>
             <div style="background-color: #f8fafc; border-radius: 10px; padding: 0.6rem 0.8rem; border: 1px solid #f1f5f9; display: flex; flex-direction: column; justify-content: space-between;">
                 <div>
-                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">BMI</div>
+                    <div style="font-size: 0.72rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">IMT</div>
                     <div style="font-size: 0.95rem; font-weight: 700; color: #0f172a; margin-top: 0.15rem;">{bmi:.2f}</div>
                 </div>
                 <div style="
@@ -296,7 +296,7 @@ with header_placeholder.container():
 with alerts_placeholder.container():
     if alerts:
         st_html("<div style='margin-bottom: 1.5rem;'>")
-        st_html("<h4 style='color: #0F172A; font-size: 18px; font-weight: 700; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;'><span class=\"material-symbols-outlined\" style=\"font-size: 20px; color: #B45309;\">warning</span> Real-time Clinical Alerts</h4>")
+        st_html("<h4 style='color: #0F172A; font-size: 18px; font-weight: 700; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;'><span class=\"material-symbols-outlined\" style=\"font-size: 20px; color: #B45309;\">warning</span> Peringatan Klinis Real-time</h4>")
         for alert in alerts:
             if alert["type"] == "danger":
                 bg = "#FEF2F2"
@@ -330,7 +330,7 @@ with alerts_placeholder.container():
 col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
 with col_btn_c:
     predict_clicked = st.button(
-        "🔮  Run CDSS Diagnostic Prediction",
+        "🔮  Jalankan Prediksi Klinis",
         use_container_width=True,
         type="primary"
     )
@@ -365,7 +365,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             show_warning_card("⚠️ Data Input Pasien Tidak Valid", val_err)
             st.stop()
 
-        with st.spinner("Processing CDSS Diagnostic Prediction..."):
+        with st.spinner("Memproses Prediksi Klinis..."):
             try:
                 from utils.prediction import ModelLoadError, predict_single
                 label, prob_yes = predict_single(patient_data)
@@ -391,21 +391,21 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 # Clinical Risk Badge calculation
                 if prob_yes_pct >= 85:
                     risk_level = "High Risk"
-                    risk_badge = "🔴 High Risk"
+                    risk_badge = "🔴 Risiko Tinggi"
                     risk_color = "#EF4444"
                     risk_color_rgb = (239, 68, 68)
                     risk_bg = "#FEF2F2"
                     risk_border = "#FCA5A5"
                 elif 60 <= prob_yes_pct < 85:
                     risk_level = "Moderate Risk"
-                    risk_badge = "🟠 Moderate Risk"
+                    risk_badge = "🟠 Risiko Sedang"
                     risk_color = "#F59E0B"
                     risk_color_rgb = (245, 158, 11)
                     risk_bg = "#FFFBEB"
                     risk_border = "#FCD34D"
                 else:
                     risk_level = "Low Risk"
-                    risk_badge = "🟢 Low Risk"
+                    risk_badge = "🟢 Risiko Rendah"
                     risk_color = "#22C55E"
                     risk_color_rgb = (34, 197, 94)
                     risk_bg = "#ECFDF5"
@@ -514,16 +514,16 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             except ModelLoadError:
                 from utils.config import show_error_card
                 show_error_card(
-                    "❌ Model Machine Learning tidak dapat dimuat",
-                    "Possible causes:<br>• File model tidak ditemukan.<br>• Model rusak.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+                    "Model Prediksi Tidak Dapat Dimuat",
+                    "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
                 )
                 st.stop()
             except Exception as e:
                 from utils.config import logger, show_error_card
                 logger.error("Single prediction failed: %s", str(e), exc_info=True)
                 show_error_card(
-                    "Prediction Failed",
-                    "Sistem tidak dapat melakukan prediksi karena data yang dimasukkan tidak valid. Periksa kembali data pasien kemudian coba kembali."
+                    "Prediksi Gagal Diproses",
+                    "Sistem tidak dapat melakukan prediksi. Periksa kembali data pasien kemudian coba kembali."
                 )
                 st.stop()
 
@@ -551,7 +551,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             pdf_report_bytes = res["pdf_report_bytes"]
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st_html("<h3 class=\"section-title-custom\">🔮 Prediction Analysis & Summary</h3>")
+            st_html("<h3 class=\"section-title-custom\">🔮 Hasil Prediksi & Analisis Klinis</h3>")
             
             col_res_left, col_res_right = st.columns([3, 2])
 
@@ -559,27 +559,27 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 # Diagnostic Summary Card
                 st_html(f"""
                 <div class="cdss-card">
-                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">CDSS DIAGNOSTIC ANALYSIS</div>
-                    <div style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 0.5rem 0 0.8rem 0;">Prediction Summary</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">ANALISIS DIAGNOSTIK KLINIS</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 0.5rem 0 0.8rem 0;">Ringkasan Prediksi</div>
                     <div style="border-top: 1px solid #E8EEF5; padding-top: 0.8rem; display: flex; flex-direction: column; gap: 0.6rem; font-size: 16px;">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B;">Prediction Outcome:</span>
+                            <span style="color: #64748B;">Hasil Prediksi:</span>
                             <span class="cdss-badge cdss-badge-{'danger' if label == 'Yes' else 'success'}">
-                                {'Need Oxygen Therapy' if label == 'Yes' else 'No Oxygen Therapy Needed'}
+                                {'Butuh Terapi Oksigen' if label == 'Yes' else 'Tidak Butuh Terapi Oksigen'}
                             </span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B;">Probability:</span>
+                            <span style="color: #64748B;">Probabilitas:</span>
                             <span style="font-weight: 600; color: #0F172A;">{prob_yes_pct:.1f}%</span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B;">Confidence Level:</span>
+                            <span style="color: #64748B;">Tingkat Keyakinan:</span>
                             <span class="cdss-badge cdss-badge-{'danger' if confidence_label == 'Low' else ('warning' if confidence_label == 'Moderate' else 'success')}">
                                 {confidence_level} ({prob_pct:.1f}%)
                             </span>
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span style="color: #64748B;">Clinical Risk Level:</span>
+                            <span style="color: #64748B;">Tingkat Risiko Klinis:</span>
                             <span class="cdss-badge cdss-badge-{'danger' if risk_level == 'High Risk' else ('warning' if risk_level == 'Moderate Risk' else 'success')}">
                                 {risk_level}
                             </span>
@@ -591,75 +591,53 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 # Key Clinical Factors Checklist Card
                 indicator_html = ""
                 if sao2 < 92:
-                    indicator_html += f"<li style='color: #EF4444; margin-bottom: 0.4rem;'><strong>Low Oxygen Saturation:</strong> SaO2 is below 92% ({sao2:.1f}%)</li>"
+                    indicator_html += f"<li style='color: #EF4444; margin-bottom: 0.4rem;'><strong>Saturasi Oksigen Rendah:</strong> SaO2 di bawah 92% ({sao2:.1f}%)</li>"
                 else:
-                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Normal oxygen saturation ({sao2:.1f}%)</li>"
+                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Saturasi oksigen normal ({sao2:.1f}%)</li>"
                 
                 if is_tachypnea:
-                    indicator_html += f"<li style='color: #F59E0B; margin-bottom: 0.4rem;'><strong>Elevated Respiratory Rate:</strong> Tachypnea detected ({rr} bpm)</li>"
+                    indicator_html += f"<li style='color: #F59E0B; margin-bottom: 0.4rem;'><strong>Laju Pernapasan Meningkat:</strong> Takipnea terdeteksi ({rr} bpm)</li>"
                 else:
-                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Normal respiratory rate ({rr} bpm)</li>"
+                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Laju pernapasan normal ({rr} bpm)</li>"
                     
                 if temp > 37.5:
-                    indicator_html += f"<li style='color: #F59E0B; margin-bottom: 0.4rem;'><strong>Fever Present:</strong> Temperature is {temp:.1f}°C</li>"
+                    indicator_html += f"<li style='color: #F59E0B; margin-bottom: 0.4rem;'><strong>Demam:</strong> Suhu {temp:.1f}°C</li>"
                 else:
-                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Normal body temperature ({temp:.1f}°C)</li>"
+                    indicator_html += f"<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Suhu tubuh normal ({temp:.1f}°C)</li>"
                     
                 if wheezing == "Yes":
-                    indicator_html += "<li style='color: #3282B8; margin-bottom: 0.4rem;'><strong>Wheezing Present:</strong> Adventitious bronchial sounds</li>"
+                    indicator_html += "<li style='color: #3282B8; margin-bottom: 0.4rem;'><strong>Wheezing Terdengar:</strong> Suara napas bronkial tambahan</li>"
                 else:
-                    indicator_html += "<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ No wheezing detected</li>"
+                    indicator_html += "<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Tidak ada wheezing</li>"
                     
                 if nasal_flaring == "Yes":
-                    indicator_html += "<li style='color: #EF4444; margin-bottom: 0.4rem;'><strong>Nasal Flaring Present:</strong> Sign of respiratory distress</li>"
+                    indicator_html += "<li style='color: #EF4444; margin-bottom: 0.4rem;'><strong>Napas Cuping Hidung:</strong> Tanda distres pernapasan</li>"
                 else:
-                    indicator_html += "<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ No nasal flaring observed</li>"
+                    indicator_html += "<li style='color: #1E293B; margin-bottom: 0.4rem;'>✓ Tidak ada napas cuping hidung</li>"
 
                 st_html(f"""
                 <div class="cdss-card">
-                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">PATIENT-SPECIFIC FINDINGS</div>
-                    <div style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 0.4rem 0 0.8rem 0;">Key Clinical Indicators</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px;">TEMUAN KLINIS PASIEN</div>
+                    <div style="font-size: 18px; font-weight: 700; color: #0F172A; margin: 0.4rem 0 0.8rem 0;">Indikator Klinis Utama</div>
                     <ul class="clinical-indicator-list" style="margin: 0; padding-left: 1.2rem; color: #1E293B; font-size: 15px; line-height: 1.6;">
                         {indicator_html}
                     </ul>
                 </div>
                 """)
 
-                # Generate professional PDF report using ReportLab
-                pdf_report_bytes = None
-                try:
-                    pdf_report_bytes = generate_pdf_report(
-                        patient_data=patient_data,
-                        prediction=label,
-                        probability=prob_yes,
-                        confidence=confidence_label,
-                        risk_level=risk_level,
-                        clinical_summary=narrative_text,
-                        top_shap_features=top_10,
-                        shap_values=shap_values_list,
-                        feature_names=ALL_FEATURES,
-                        recommendation=rec_dict
-                    )
-                except Exception as pdf_err:
-                    from utils.config import logger, show_error_card
-                    logger.error("Single PDF report generation failed: %s", str(pdf_err), exc_info=True)
-                    show_error_card(
-                        "Failed to Generate Report",
-                        "Silakan coba kembali beberapa saat lagi."
-                    )
-                    pdf_report_bytes = None
-                
                 # Download Button for PDF Report
                 if pdf_report_bytes:
-                    report_filename = f"OxyPredict_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                    report_filename = f"OxyPredict_Laporan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
                     st.download_button(
-                        label="📄 Download Clinical Report (PDF)",
+                        label="📄 Unduh Laporan Klinis (PDF)",
                         data=pdf_report_bytes,
                         file_name=report_filename,
                         mime="application/pdf",
                         use_container_width=True,
                         on_click=track_pdf_report_generated
                     )
+                else:
+                    st.warning("Laporan PDF tidak dapat dibuat saat ini.")
                     
             with col_res_right:
                 # Gauge Chart rendering
@@ -671,7 +649,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     justify-content: center;
                     min-height: 250px;
                 ">
-                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; text-align: left; margin-bottom: 1rem;">OXYGEN NEED PROBABILITY</div>
+                    <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; width: 100%; text-align: left; margin-bottom: 1rem;">PROBABILITAS KEBUTUHAN OKSIGEN</div>
                 """)
 
                 if use_plotly:
@@ -727,16 +705,16 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     rec_bg = "#FEF2F2"
                     rec_border = "#EF4444"
                     rec_color = "#B91C1C"
-                    rec_text = "Patient should receive further respiratory assessment and oxygen monitoring."
+                    rec_text = "Pasien perlu menjalani penilaian pernapasan lebih lanjut dan pemantauan saturasi oksigen."
                 else:
                     rec_bg = "#ECFDF5"
                     rec_border = "#22C55E"
                     rec_color = "#15803D"
-                    rec_text = "Patient does not require oxygen therapy at this time. Maintain standard monitoring and reassessment."
+                    rec_text = "Pasien tidak memerlukan terapi oksigen saat ini. Lanjutkan pemantauan rutin dan penilaian ulang jika kondisi berubah."
 
                 st_html(f"""
                 <div class="cdss-card" style="border-left: 5px solid {rec_border};">
-                    <h5 style="margin: 0 0 0.4rem 0; color: #0F172A; font-weight: 700; font-size: 16px;">Suggested Considerations</h5>
+                    <h5 style="margin: 0 0 0.4rem 0; color: #0F172A; font-weight: 700; font-size: 16px;">Pertimbangan Klinis Awal</h5>
                     <p style="margin: 0; color: {rec_color}; font-size: 15px; line-height: 1.6; font-weight: 500;">
                         {rec_text}
                     </p>
@@ -745,27 +723,19 @@ if predict_clicked or st.session_state.get("single_predicted", False):
 
             st.markdown("---")
 
-            # =================================================================
-            # SHAP-Based AI Prediction Explanation
-            # =================================================================
-
-
             # ── Section 1: Header ─────────────────────────────────────────
             st_html("""
             <div class="cdss-card" style="border-left: 6px solid #0F4C75; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem;">
                     <span class="material-symbols-outlined" style="font-size: 26px; color: #0F4C75;">psychology</span>
-                    <h2 style="margin: 0; color: #0F172A; font-size: 22px; font-weight: 700;">AI Prediction Explanation</h2>
+                    <h2 style="margin: 0; color: #0F172A; font-size: 22px; font-weight: 700;">Penjelasan Prediksi Berbasis SHAP</h2>
                 </div>
                 <p style="margin: 0; color: #64748B; font-size: 15px; line-height: 1.6;">
-                    This explanation is generated using <strong style="color: #0F172A;">SHAP</strong>
-                    (SHapley Additive exPlanations) to improve transparency of the machine learning prediction.
+                    Penjelasan ini dihasilkan menggunakan <strong style="color: #0F172A;">SHAP</strong>
+                    (SHapley Additive exPlanations) untuk meningkatkan transparansi hasil prediksi model.
                 </p>
             </div>
             """)
-
-            # ── Section 2: Compute SHAP ───────────────────────────────────
-            # Already computed upfront
 
             if shap_ok:
                 top_10 = shap_values_list[:10]
@@ -773,19 +743,19 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
 
                 # ── Section 3: Top 10 Features Table ──────────────────────
-                st_html("<h3 class=\"section-title-custom\">📊 Top 10 Contributing Features</h3>")
-                st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Features ranked by absolute SHAP value — showing the strongest influences on this prediction:</p>")
+                st_html("<h3 class=\"section-title-custom\">📊 10 Fitur dengan Pengaruh Terbesar</h3>")
+                st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Fitur diurutkan berdasarkan nilai SHAP absolut — menunjukkan pengaruh terkuat terhadap prediksi ini:</p>")
 
                 table_rows = ""
                 for i, sv in enumerate(top_10):
                     shap_val = sv["shap_value"]
                     if shap_val > 0:
-                        impact_label = "↑ Increases Prediction"
+                        impact_label = "↑ Meningkatkan Prediksi"
                         impact_color = "#EF4444"
                         impact_bg = "#FEF2F2"
                         sign = "+"
                     else:
-                        impact_label = "↓ Decreases Prediction"
+                        impact_label = "↓ Menurunkan Prediksi"
                         impact_color = "#3282B8"
                         impact_bg = "#EFF6FF"
                         sign = ""
@@ -821,10 +791,10 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     <table style="width: 100%; border-collapse: collapse;">
                         <thead>
                             <tr style="background-color: #0F4C75;">
-                                <th style="padding: 0.85rem 1.2rem; text-align: left; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Feature</th>
-                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Patient Value</th>
-                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">SHAP Value</th>
-                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Impact</th>
+                                <th style="padding: 0.85rem 1.2rem; text-align: left; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Fitur</th>
+                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Nilai Pasien</th>
+                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Nilai SHAP</th>
+                                <th style="padding: 0.85rem 1.2rem; text-align: center; color: #FFFFFF; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; border-bottom: 2px solid #3282B8;">Dampak</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -835,7 +805,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 """)
 
                 # ── Section 4: Positive / Negative Split ──────────────────
-                st_html("<h3 class=\"section-title-custom\">⚖️ Feature Impact Direction</h3>")
+                st_html("<h3 class=\"section-title-custom\">⚖️ Arah Dampak Fitur</h3>")
 
                 col_pos, col_neg = st.columns(2)
 
@@ -849,12 +819,12 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         </div>
                         """
                     if not positive_factors:
-                        pos_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>No significant positive factors</p>"
+                        pos_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>Tidak ada faktor positif signifikan</p>"
                     st_html(f"""
                     <div class="cdss-card" style="border-top: 4px solid #EF4444; height: 100%;">
                         <div style="font-size: 16px; font-weight: 700; color: #EF4444; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
                             <span class="material-symbols-outlined" style="font-size: 20px;">trending_up</span>
-                            Features Increasing Prediction
+                            Fitur yang Meningkatkan Prediksi
                         </div>
                         {pos_items}
                     </div>
@@ -870,19 +840,19 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         </div>
                         """
                     if not negative_factors:
-                        neg_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>No significant negative factors</p>"
+                        neg_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>Tidak ada faktor negatif signifikan</p>"
                     st_html(f"""
                     <div class="cdss-card" style="border-top: 4px solid #3282B8; height: 100%;">
                         <div style="font-size: 16px; font-weight: 700; color: #3282B8; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
                             <span class="material-symbols-outlined" style="font-size: 20px;">trending_down</span>
-                            Features Decreasing Prediction
+                            Fitur yang Menurunkan Prediksi
                         </div>
                         {neg_items}
                     </div>
                     """)
 
                 # ── Section 5: Interactive Plotly SHAP Bar Chart ──────────
-                st_html("<h3 class=\"section-title-custom\">📈 SHAP Value Distribution (Interactive)</h3>")
+                st_html("<h3 class=\"section-title-custom\">📈 Distribusi Nilai SHAP (Interaktif)</h3>")
 
                 if use_plotly:
                     chart_data = list(reversed(top_10))
@@ -898,7 +868,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                             color=chart_colors,
                             line=dict(width=0),
                         ),
-                        hovertemplate="<b>%{y}</b><br>SHAP Value: %{x:.4f}<extra></extra>"
+                        hovertemplate="<b>%{y}</b><br>Nilai SHAP: %{x:.4f}<extra></extra>"
                     ))
                     fig_shap.update_layout(
                         height=380,
@@ -907,7 +877,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         plot_bgcolor="rgba(0,0,0,0)",
                         font=dict(family="Inter", color="#1E293B", size=12),
                         xaxis=dict(
-                            title="SHAP Value (impact on prediction)",
+                            title="Nilai SHAP (dampak pada prediksi)",
                             titlefont=dict(size=11, color="#64748b"),
                             gridcolor="#EAF2F8",
                             zerolinecolor="#D6E4F0",
@@ -924,20 +894,19 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         'displaylogo': False,
                     })
                 else:
-                    st.info("ℹ️ Install Plotly (`pip install plotly`) for an interactive SHAP chart.")
+                    st.info("ℹ️ Instal Plotly (`pip install plotly`) untuk grafik SHAP interaktif.")
 
                 # ── Section 5.5: AI Clinical Summary (Explainable AI) ─────
-                # Already computed upfront
                 st_html(f"""
                 <div class="cdss-card" style="border-left: 6px solid #3282B8; margin-top: 1.5rem; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;">
                         <span class="material-symbols-outlined" style="font-size: 28px; color: #3282B8; line-height: 1; flex-shrink: 0;">psychology</span>
                         <div>
                             <h4 style="margin: 0; color: #0F172A; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; line-height: 1.2;">
-                                AI Clinical Summary
+                                Ringkasan Klinis AI
                             </h4>
                             <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.1rem;">
-                                Generated from SHAP Explainable AI
+                                Dihasilkan dari Explainable AI (SHAP)
                             </div>
                         </div>
                     </div>
@@ -960,15 +929,19 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 if priority_val == "Emergency":
                     border_col = "#B91C1C"
                     badge_class = "cdss-badge-danger"
+                    priority_text = "Darurat"
                 elif priority_val == "High":
                     border_col = "#B45309"
                     badge_class = "cdss-badge-warning"
+                    priority_text = "Tinggi"
                 elif priority_val == "Medium":
                     border_col = "#B45309"
                     badge_class = "cdss-badge-warning"
+                    priority_text = "Sedang"
                 else:
                     border_col = "#15803D"
                     badge_class = "cdss-badge-success"
+                    priority_text = "Rendah"
 
                 actions_html = "".join([f"<li style='margin-bottom: 0.3rem;'>{act}</li>" for act in rec_dict["clinical_action"]])
                 monitoring_html = "".join([f"<li style='margin-bottom: 0.3rem;'>{mon}</li>" for mon in rec_dict["monitoring"]])
@@ -981,27 +954,27 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                             <span class="material-symbols-outlined" style="font-size: 24px; color: {border_col}; line-height: 1;">assignment</span>
                             <div>
                                 <h4 style="margin: 0; color: #0F172A; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; line-height: 1.2;">
-                                    Clinical Recommendation
+                                    Rekomendasi Klinis
                                 </h4>
                                 <div style="font-size: 13px; color: #64748B; font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 0.1rem;">
-                                    Rule-Based CDSS Recommendation
+                                    Rekomendasi CDSS Berbasis Aturan Klinis
                                 </div>
                             </div>
                         </div>
                         <span class="cdss-badge {badge_class}">
-                            {priority_val} Priority
+                            Prioritas {priority_text}
                         </span>
                     </div>
 
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.2rem;">
                         <div>
-                            <h5 style="margin: 0 0 0.5rem 0; color: #0F172A; font-size: 16px; font-weight: 600; border-bottom: 1px solid #D6E4F0; padding-bottom: 0.3rem;">Clinical Actions</h5>
+                            <h5 style="margin: 0 0 0.5rem 0; color: #0F172A; font-size: 16px; font-weight: 600; border-bottom: 1px solid #D6E4F0; padding-bottom: 0.3rem;">Tindakan Klinis</h5>
                             <ul style="margin: 0; padding-left: 1.2rem; color: #1E293B; font-size: 16px; line-height: 1.6;">
                                 {actions_html}
                             </ul>
                         </div>
                         <div>
-                            <h5 style="margin: 0 0 0.5rem 0; color: #0F172A; font-size: 16px; font-weight: 600; border-bottom: 1px solid #D6E4F0; padding-bottom: 0.3rem;">Monitoring Guidelines</h5>
+                            <h5 style="margin: 0 0 0.5rem 0; color: #0F172A; font-size: 16px; font-weight: 600; border-bottom: 1px solid #D6E4F0; padding-bottom: 0.3rem;">Panduan Pemantauan</h5>
                             <ul style="margin: 0; padding-left: 1.2rem; color: #1E293B; font-size: 16px; line-height: 1.6;">
                                 {monitoring_html}
                             </ul>
@@ -1018,7 +991,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         color: #B45309;
                         line-height: 1.5;
                     ">
-                        <strong>Disclaimer & Guidelines:</strong><br/>
+                        <strong>Perhatian & Pedoman:</strong><br/>
                         {notes_html}
                     </div>
                 </div>
@@ -1035,7 +1008,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 ">
                     <h4 style="margin: 0 0 0.6rem 0; color: #1D4ED8; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 0.4rem;">
                         <span class="material-symbols-outlined" style="font-size: 22px; color: #1D4ED8; vertical-align: middle;">lightbulb</span>
-                        Clinical Interpretation
+                        Interpretasi Klinis
                     </h4>
                     <p style="margin: 0; color: #1D4ED8; font-size: 16px; line-height: 1.7;">
                         {interpretation}
@@ -1044,7 +1017,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 """)
 
                 # ── Section 7: Top 5 Feature Importance Cards ─────────────
-                st_html("<h3 class=\"section-title-custom\">🏆 Top 5 Most Influential Features</h3>")
+                st_html("<h3 class=\"section-title-custom\">🏆 5 Fitur Paling Berpengaruh</h3>")
 
                 top_5_shap = shap_values_list[:5]
                 cols_top5 = st.columns(5)
@@ -1093,7 +1066,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 st.markdown("")
 
                 # ── Section 8: Explainability Summary ─────────────────────
-                st_html("<h3 class=\"section-title-custom\">📋 Explainability Summary</h3>")
+                st_html("<h3 class=\"section-title-custom\">📋 Ringkasan Eksplanabilitas Model</h3>")
 
                 n_positive = len(positive_factors)
                 n_negative = len(negative_factors)
@@ -1101,13 +1074,13 @@ if predict_clicked or st.session_state.get("single_predicted", False):
 
                 sm1, sm2, sm3, sm4 = st.columns(4)
                 with sm1:
-                    st.metric("Prediction Confidence", f"{prob_pct:.1f}%")
+                    st.metric("Tingkat Keyakinan Prediksi", f"{prob_pct:.1f}%")
                 with sm2:
-                    st.metric("Top Positive Factors", f"{n_positive}")
+                    st.metric("Faktor Pendorong Positif", f"{n_positive}")
                 with sm3:
-                    st.metric("Top Negative Factors", f"{n_negative}")
+                    st.metric("Faktor Pendorong Negatif", f"{n_negative}")
                 with sm4:
-                    st.metric("Most Influential", most_influential[:20])
+                    st.metric("Fitur Paling Berpengaruh", most_influential[:20])
 
                 st.markdown("")
 
@@ -1115,18 +1088,18 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 st_html("""
                 <div class="cdss-card">
                     <p style="margin: 0; color: #64748B; font-size: 14px; line-height: 1.7;">
-                        <strong style="color: #0F172A;">About SHAP Values:</strong>
-                        SHAP (SHapley Additive exPlanations) values quantify how much each feature contributes to an individual prediction.
-                        Positive SHAP values <strong style="color: #EF4444;">increase</strong> the probability of Oxygen Therapy,
-                        while negative values <strong style="color: #3282B8;">reduce</strong> it.
-                        The sum of all SHAP values plus the base value equals the model's prediction output for this patient.
+                        <strong style="color: #0F172A;">Tentang Nilai SHAP:</strong>
+                        Nilai SHAP (SHapley Additive exPlanations) mengukur seberapa besar kontribusi setiap fitur terhadap prediksi individu.
+                        Nilai SHAP positif <strong style="color: #EF4444;">meningkatkan</strong> probabilitas Terapi Oksigen,
+                        sementara nilai negatif <strong style="color: #3282B8;">menguranginya</strong>.
+                        Jumlah semua nilai SHAP ditambah nilai dasar sama dengan hasil prediksi model untuk pasien ini.
                     </p>
                 </div>
                 """)
             else:
                 from utils.config import show_warning_card
                 show_warning_card(
-                    "Explainability unavailable",
+                    "Penjelasan Tidak Tersedia",
                     "Penjelasan SHAP tidak dapat dihitung untuk prediksi ini. Prediksi tetap valid."
                 )
 
@@ -1135,22 +1108,22 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             <div class="cdss-card" style="display: flex; align-items: flex-start; gap: 0.8rem; margin-top: 1.5rem;">
                 <span class="material-symbols-outlined" style="font-size: 22px; color: #64748B; flex-shrink: 0; margin-top: 0.1rem;">info</span>
                 <p style="margin: 0; color: #64748B; font-size: 14px; line-height: 1.6;">
-                    <strong>Disclaimer:</strong> This recommendation is generated by a machine learning model and should be used only as a Clinical Decision Support System (CDSS). Final medical decisions remain the responsibility of qualified healthcare professionals.
+                    <strong>Peringatan:</strong> Rekomendasi ini dihasilkan oleh model prediksi dan hanya boleh digunakan sebagai alat bantu keputusan klinis (CDSS). Keputusan medis akhir tetap menjadi tanggung jawab tenaga kesehatan profesional yang berkualifikasi.
                 </p>
             </div>
             """)
 
         except ModelLoadError:
             show_error_card(
-                "❌ Model Machine Learning tidak dapat dimuat",
-                "Possible causes:<br>• File model tidak ditemukan.<br>• Model rusak.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+                "Model Prediksi Tidak Dapat Dimuat",
+                "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
             )
         except Exception as e:
             from utils.config import logger
             logger.error("Single prediction failed: %s", str(e), exc_info=True)
             show_error_card(
-                "Prediction Failed",
-                "Sistem tidak dapat melakukan prediksi karena data yang dimasukkan tidak valid. Periksa kembali data pasien kemudian coba kembali."
+                "Prediksi Gagal Diproses",
+                "Sistem tidak dapat melakukan prediksi. Periksa kembali data pasien kemudian coba kembali."
             )
 
 # ─── Footer ──────────────────────────────────────────────────────────────────

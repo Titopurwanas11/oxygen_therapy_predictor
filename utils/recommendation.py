@@ -5,65 +5,65 @@ This module processes model outputs and key clinical features to generate recomm
 
 def get_base_rule_recommendation(prediction: str, prob_pct: float, risk_normalized: str) -> tuple:
     """Helper to evaluate the base priority, actions, and monitoring guidelines."""
-    priority = "Low"
+    priority = "Rendah"
     actions = []
     monitoring = []
     
     # RULE 1: Prediction Yes, Risk High (or Very High), Prob >= 90%
     if (prediction == "Yes" or prediction == 1) and "high" in risk_normalized and prob_pct >= 90.0:
-        priority = "Emergency"
+        priority = "Darurat"
         actions = [
-            "Immediate oxygen therapy assessment is recommended.",
-            "Evaluate respiratory distress immediately.",
-            "Prepare oxygen support according to hospital protocol.",
-            "Urgent pediatric evaluation is recommended."
+            "Evaluasi terapi oksigen segera direkomendasikan.",
+            "Nilai distress pernapasan secara mendesak.",
+            "Siapkan dukungan oksigen sesuai protokol rumah sakit.",
+            "Penilaian pediatrik darurat disarankan."
         ]
-        monitoring = ["Continuous pulse oximetry monitoring."]
+        monitoring = ["Monitoring oximetri pulsa kontinu."]
         
     # RULE 2: Prediction Yes, Risk High (or Very High), Prob 80-89%
     elif (prediction == "Yes" or prediction == 1) and "high" in risk_normalized and prob_pct >= 80.0:
-        priority = "High"
+        priority = "Tinggi"
         actions = [
-            "Consider oxygen therapy.",
-            "Repeat SpO₂ measurement.",
-            "Reassess within 30 minutes."
+            "Pertimbangkan terapi oksigen.",
+            "Ulangi pengukuran SpO₂.",
+            "Evaluasi ulang dalam 30 menit."
         ]
-        monitoring = ["Monitor respiratory status closely."]
+        monitoring = ["Pantau status pernapasan secara ketat."]
         
     # RULE 3: Prediction Yes, Risk Medium (or Moderate)
     elif (prediction == "Yes" or prediction == 1) and ("medium" in risk_normalized or "moderate" in risk_normalized):
-        priority = "Medium"
+        priority = "Sedang"
         actions = [
-            "Patient should be closely observed.",
-            "Repeat clinical assessment if symptoms worsen."
+            "Pasien harus diawasi secara ketat.",
+            "Ulangi penilaian klinis jika gejala memburuk."
         ]
-        monitoring = ["Monitor oxygen saturation regularly."]
+        monitoring = ["Pantau saturasi oksigen secara berkala."]
         
     # RULE 4: Prediction No, Risk Low (or Low-Moderate)
     elif (prediction == "No" or prediction == 0) and "low" in risk_normalized:
-        priority = "Low"
+        priority = "Rendah"
         actions = [
-            "Routine observation is recommended.",
-            "Continue standard supportive treatment.",
-            "Repeat assessment if new respiratory symptoms appear."
+            "Observasi rutin direkomendasikan.",
+            "Lanjutkan perawatan suportif standar.",
+            "Ulangi penilaian jika gejala pernapasan baru muncul."
         ]
-        monitoring = ["Routine vital sign checks."]
+        monitoring = ["Pemeriksaan tanda vital rutin."]
         
     # Fallbacks for other states (e.g. Risk is Low but prediction is Yes, or Risk is Medium but prediction is No)
     elif prediction == "Yes" or prediction == 1:
-        priority = "Medium"
+        priority = "Sedang"
         actions = [
-            "Patient should be closely observed.",
-            "Reassess respiratory status if conditions change."
+            "Pasien harus diawasi secara ketat.",
+            "Evaluasi ulang status pernapasan jika kondisi berubah."
         ]
-        monitoring = ["Monitor oxygen saturation regularly."]
+        monitoring = ["Pantau saturasi oksigen secara berkala."]
     else:
-        priority = "Low"
+        priority = "Rendah"
         actions = [
-            "Routine observation is recommended.",
-            "Re-evaluate if new respiratory symptoms develop."
+            "Observasi rutin direkomendasikan.",
+            "Evaluasi ulang jika gejala pernapasan baru berkembang."
         ]
-        monitoring = ["Standard nursing monitoring guidelines."]
+        monitoring = ["Panduan monitoring keperawatan standar."]
         
     return priority, actions, monitoring
 
@@ -178,8 +178,8 @@ def generate_recommendation(
     
     # Notes block as specified in instructions
     notes = [
-        "Clinical recommendations are generated using predefined clinical decision rules based on the model prediction and selected patient characteristics.",
-        "These recommendations are intended to support healthcare professionals and should not replace physician judgment, institutional protocols, or clinical examination."
+        "Rekomendasi klinis disusun berdasarkan aturan keputusan klinis terdefinisi yang dipadukan dengan hasil prediksi dan karakteristik pasien.",
+        "Rekomendasi ini dimaksudkan untuk mendukung tenaga kesehatan dan tidak menggantikan penilaian dokter, protokol institusional, atau pemeriksaan klinis."
     ]
     
     return {
@@ -187,5 +187,5 @@ def generate_recommendation(
         "clinical_action": actions_uniq,
         "monitoring": monitoring_uniq,
         "notes": notes,
-        "recommendation_level": "AI-assisted Rule-Based Recommendation"
+        "recommendation_level": "Rekomendasi Berbasis Aturan dengan Dukungan AI"
     }

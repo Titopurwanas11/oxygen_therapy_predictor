@@ -909,6 +909,7 @@ def _get_logo_html(active_page="dashboard"):
     dashboard_active = "active" if active_page == "dashboard" else ""
     single_active = "active" if active_page == "single" else ""
     batch_active = "active" if active_page == "batch" else ""
+    monitoring_active = "active" if active_page == "monitoring" else ""
     clinical_active = "active" if active_page == "clinical" else ""
     
     return f"""
@@ -930,7 +931,7 @@ def _get_logo_html(active_page="dashboard"):
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
             </svg>
-            <span>Single Prediction</span>
+            <span>Prediksi Pasien</span>
         </a>
         
         <a href="/Batch_Prediction" target="_self" class="sidebar-nav-item {batch_active}" id="nav-batch">
@@ -938,14 +939,23 @@ def _get_logo_html(active_page="dashboard"):
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
             </svg>
-            <span>Batch Prediction</span>
+            <span>Prediksi Massal</span>
+        </a>
+        
+        <a href="/Monitoring_Prediksi" target="_self" class="sidebar-nav-item {monitoring_active}" id="nav-monitoring">
+            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+            <span>Monitoring Prediksi</span>
         </a>
         
         <a href="/Clinical_Decision_Guide" target="_self" class="sidebar-nav-item {clinical_active}" id="nav-clinical">
             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
-            <span>Clinical Guide</span>
+            <span>Panduan Klinis</span>
         </a>
         
         <div class="sidebar-footer">
@@ -1068,9 +1078,11 @@ def setup_page(page_title: str):
     title_lower = page_title.lower()
     if "single" in title_lower or "prediksi pasien" in title_lower:
         active_page = "single"
-    elif "batch" in title_lower:
+    elif "batch" in title_lower or "prediksi massal" in title_lower:
         active_page = "batch"
-    elif "clinical" in title_lower:
+    elif "monitoring" in title_lower or "pemantauan" in title_lower:
+        active_page = "monitoring"
+    elif "clinical" in title_lower or "panduan" in title_lower:
         active_page = "clinical"
 
     # Stack-based detection (more precise)
@@ -1084,6 +1096,9 @@ def setup_page(page_title: str):
                     break
                 elif "Batch_Prediction" in basename:
                     active_page = "batch"
+                    break
+                elif "Monitoring_Prediksi" in basename:
+                    active_page = "monitoring"
                     break
                 elif "Clinical_Decision_Guide" in basename:
                     active_page = "clinical"

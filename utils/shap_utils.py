@@ -516,49 +516,49 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
         val_str = str(val).strip()
 
         if "wheezing" in feat_lower:
-            return "wheezing" if val_str == "Yes" else "absence of wheezing"
+            return "suara mengi" if val_str == "Yes" else "tidak ada suara mengi"
         elif "nasal flaring" in feat_lower:
-            return "nasal flaring" if val_str == "Yes" else "absence of nasal flaring"
+            return "penggelembungan hidung" if val_str == "Yes" else "tidak ada penggelembungan hidung"
         elif "cyanosis" in feat_lower:
-            return "cyanosis" if val_str == "Yes" else "absence of cyanosis"
+            return "sianosis" if val_str == "Yes" else "tidak ada sianosis"
         elif "restlessness" in feat_lower:
-            return "restlessness" if val_str == "Yes" else "absence of restlessness"
+            return "gelisah" if val_str == "Yes" else "tidak ada gelisah"
         elif "sleepiness" in feat_lower:
-            return "unusual sleepiness" if val_str == "Yes" else "absence of unusual sleepiness"
+            return "kantuk tidak biasa" if val_str == "Yes" else "tidak ada kantuk tidak biasa"
         elif "crackles" in feat_lower:
-            return "crackles on auscultation" if val_str == "Yes" else "absence of crackles"
+            return "ronki pada auskultasi" if val_str == "Yes" else "tidak ada ronki"
         elif "rhonchi" in feat_lower:
-            return "rhonchi" if val_str == "Yes" else "absence of rhonchi"
+            return "ronki" if val_str == "Yes" else "tidak ada ronki"
         elif "dehydration" in feat_lower:
-            return "signs of dehydration" if val_str == "Yes" else "absence of dehydration signs"
+            return "tanda dehidrasi" if val_str == "Yes" else "tidak ada tanda dehidrasi"
         elif "consciousness" in feat_lower:
-            return "disorders of consciousness" if val_str == "Yes" else "normal consciousness level"
+            return "gangguan kesadaran" if val_str == "Yes" else "tingkat kesadaran normal"
         elif "paleness" in feat_lower:
-            return "paleness" if val_str == "Yes" else "absence of paleness"
+            return "pucat" if val_str == "Yes" else "tidak ada pucat"
         elif "stridor" in feat_lower:
-            return "laryngeal stridor" if val_str == "Yes" else "absence of laryngeal stridor"
+            return "stridor laring" if val_str == "Yes" else "tidak ada stridor laring"
         elif "hypoventilation" in feat_lower:
-            return "hypoventilation" if val_str == "Yes" else "normal ventilation"
+            return "hipoventilasi" if val_str == "Yes" else "ventilasi normal"
         elif "aspiration" in feat_lower:
-            return "nasopharyngeal aspiration performed" if val_str == "Yes" else "absence of aspiration history"
+            return "aspirasi nasofaring dilakukan" if val_str == "Yes" else "tidak ada riwayat aspirasi"
         elif "smokers" in feat_lower:
-            return "exposure to tobacco smoke at home" if val_str == "Yes" else "no tobacco smoke exposure"
+            return "terpapar asap rokok di rumah" if val_str == "Yes" else "tidak terpapar asap rokok"
         elif "tuberculosis" in feat_lower:
-            return "exposure to a tuberculosis patient" if val_str == "Yes" else "no tuberculosis contact"
+            return "terpapar pasien tuberkulosis" if val_str == "Yes" else "tidak ada kontak tuberkulosis"
         elif "prematurity" in feat_lower:
-            return "history of prematurity" if val_str == "Yes" else "full-term birth history"
+            return "riwayat prematuritas" if val_str == "Yes" else "riwayat lahir cukup bulan"
         elif "prior admission" in feat_lower:
-            return "prior respiratory admission" if val_str == "Yes" else "no prior respiratory admissions"
+            return "riwayat rawat inap respirasi sebelumnya" if val_str == "Yes" else "tidak ada riwayat rawat inap respirasi"
         elif "asthma" in feat_lower:
-            return "history of asthma" if val_str == "Yes" else "no asthma history"
+            return "riwayat asma" if val_str == "Yes" else "tidak ada riwayat asma"
         elif "chronic condition" in feat_lower:
-            return "presence of chronic condition" if val_str == "Yes" else "no chronic conditions"
+            return "adanya kondisi kronis" if val_str == "Yes" else "tidak ada kondisi kronis"
         elif "antibiotic" in feat_lower:
-            return "recent antibiotic usage" if val_str == "Yes" else "no recent antibiotic usage"
+            return "penggunaan antibiotik baru-baru ini" if val_str == "Yes" else "tidak ada penggunaan antibiotik baru-baru ini"
         elif "breastfeeding" in feat_lower:
-            return "history of breastfeeding" if val_str == "Yes" else "no breastfeeding history"
+            return "riwayat menyusui" if val_str == "Yes" else "tidak ada riwayat menyusui"
         elif "medical insurance" in feat_lower:
-            return "medical insurance coverage" if val_str == "Yes" else "no medical insurance coverage"
+            return "tertutup asuransi medis" if val_str == "Yes" else "tidak tertutup asuransi medis"
 
         elif "oxygen saturation" in feat_lower or "sao2" in feat_lower:
             try:
@@ -566,11 +566,11 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             except ValueError:
                 v = 96.0
             if v < 90:
-                return "decreased oxygen saturation"
+                return "saturasi oksigen menurun"
             elif 90 <= v <= 94:
-                return "mild oxygen desaturation"
+                return "desaturasi oksigen ringan"
             else:
-                return "normal oxygen saturation"
+                return "saturasi oksigen normal"
 
         elif "respiratory rate" in feat_lower:
             try:
@@ -585,7 +585,7 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
                 is_high = v >= 40
             else:
                 is_high = v >= 30
-            return "elevated respiratory rate" if is_high else "normal respiratory rate"
+            return "laju pernapasan meningkat" if is_high else "laju pernapasan normal"
 
         elif "temperature" in feat_lower:
             try:
@@ -593,9 +593,9 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             except ValueError:
                 v = 37.0
             if v >= 38.0:
-                return "mild fever" if v < 39.0 else "high fever"
+                return "demam ringan" if v < 39.0 else "demam tinggi"
             else:
-                return "normal body temperature"
+                return "suhu tubuh normal"
 
         elif "heart rate" in feat_lower:
             try:
@@ -603,56 +603,56 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             except ValueError:
                 v = 120.0
             is_tachy = v > 140 if age_months < 12 else v > 120
-            return "elevated heart rate" if is_tachy else "normal heart rate"
+            return "denyut jantung meningkat" if is_tachy else "denyut jantung normal"
 
         elif "c-reactive protein" in feat_lower or "crp" in feat_lower:
             try:
                 v = float(val)
             except ValueError:
                 v = 10.0
-            return "elevated C-reactive protein" if v > 10.0 else "normal C-reactive protein level"
+            return "C-reactive protein meningkat" if v > 10.0 else "kadar C-reactive protein normal"
 
         elif "procalcitonin" in feat_lower:
             try:
                 v = float(val)
             except ValueError:
                 v = 0.5
-            return "elevated procalcitonin level" if v > 0.5 else "normal procalcitonin level"
+            return "kadar prokalsitonin meningkat" if v > 0.5 else "kadar prokalsitonin normal"
 
         elif "vaccinations" in feat_lower:
             if val_str == "Yes":
-                return "complete vaccination status"
+                return "status imunisasi lengkap"
             elif val_str == "Partially":
-                return "partially complete vaccination status"
+                return "status imunisasi sebagian lengkap"
             else:
-                return "incomplete vaccination status"
+                return "status imunisasi tidak lengkap"
 
         elif "vomiting" in feat_lower and "days" in feat_lower:
-            return f"vomiting duration of {val_str} days"
+            return f"durasi muntah {val_str} hari"
         elif "vomiting" in feat_lower:
-            return "vomiting" if val_str == "Yes" else "no vomiting"
+            return "muntah" if val_str == "Yes" else "tidak muntah"
 
         elif "fever" in feat_lower and "days" in feat_lower:
-            return f"fever duration of {val_str} days"
+            return f"durasi demam {val_str} hari"
         elif "fever" in feat_lower:
-            return "fever history" if val_str == "Yes" else "no fever"
+            return "riwayat demam" if val_str == "Yes" else "tidak ada riwayat demam"
 
         elif "cough" in feat_lower:
-            return "cough" if val_str == "Yes" else "no cough"
+            return "batuk" if val_str == "Yes" else "tidak batuk"
         elif "diarrhea" in feat_lower:
-            return "diarrhea" if val_str == "Yes" else "no diarrhea"
+            return "diare" if val_str == "Yes" else "tidak diare"
         elif "rhinorrhea" in feat_lower:
-            return "rhinorrhea" if val_str == "Yes" else "no rhinorrhea"
+            return "rinorea" if val_str == "Yes" else "tidak rinorea"
 
         elif "age" in feat_lower:
-            return f"patient age of {val_str} months"
+            return f"usia pasien {val_str} bulan"
         elif "weight" in feat_lower:
-            return f"body weight of {val_str} Kg"
+            return f"berat badan {val_str} Kg"
         elif "height" in feat_lower:
-            return f"body height of {val_str} cm"
+            return f"tinggi badan {val_str} cm"
 
         # fallback
-        return f"presence of {feat.lower()}" if val_str == "Yes" else f"absence of {feat.lower()}"
+        return f"adanya {feat.lower()}" if val_str == "Yes" else f"tidak ada {feat.lower()}"
 
     def format_shap_value(s_val):
         sign = "+" if s_val > 0 else ""
@@ -670,7 +670,7 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
 
     if prediction == 1:
         # 1. Prediction Sentence
-        sentences.append(f"The model predicts that the patient requires oxygen therapy with a confidence of {confidence:.1f}%.")
+        sentences.append(f"Model memprediksi pasien membutuhkan terapi oksigen dengan keyakinan {confidence:.1f}%.")
 
         # 2. Strongest Contributors (Positive SHAP)
         top_pos = pos_contribs[:3]
@@ -683,13 +683,13 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             p2_shap = format_shap_value(top_pos[1]["shap_value"])
             p3_shap = format_shap_value(top_pos[2]["shap_value"])
 
-            sentences.append(f"The strongest contributors increasing the predicted risk were {p1_desc} {p1_shap}, {p2_desc} {p2_shap}, and {p3_desc} {p3_shap}, suggesting significant respiratory distress.")
+            sentences.append(f"Kontributor terkuat yang meningkatkan risiko prediksi adalah {p1_desc} {p1_shap}, {p2_desc} {p2_shap}, dan {p3_desc} {p3_shap}, menunjukkan kemungkinan gangguan pernapasan signifikan.")
         elif len(top_pos) == 2:
             p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
             p2_desc = describe_feature(top_pos[1]["feature"], feature_values.get(top_pos[1]["feature"], ""))
             p1_shap = format_shap_value(top_pos[0]["shap_value"])
             p2_shap = format_shap_value(top_pos[1]["shap_value"])
-            sentences.append(f"The strongest contributors increasing the predicted risk were {p1_desc} {p1_shap} and {p2_desc} {p2_shap}, suggesting significant respiratory distress.")
+            sentences.append(f"Kontributor terkuat yang meningkatkan risiko prediksi adalah {p1_desc} {p1_shap} dan {p2_desc} {p2_shap}, menunjukkan kemungkinan gangguan pernapasan signifikan.")
 
         # 3. Opposing Contributors (Negative SHAP)
         top_neg = neg_contribs[:2]
@@ -700,21 +700,21 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             n1_shap = format_shap_value(top_neg[0]["shap_value"])
             n2_shap = format_shap_value(top_neg[1]["shap_value"])
 
-            sentences.append(f"Conversely, the {n1_desc} {n1_shap} and {n2_desc} {n2_shap} slightly reduced the predicted probability.")
+            sentences.append(f"Sebaliknya, {n1_desc} {n1_shap} dan {n2_desc} {n2_shap} sedikit mengurangi probabilitas prediksi.")
         elif len(top_neg) == 1:
             n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
             n1_shap = format_shap_value(top_neg[0]["shap_value"])
-            sentences.append(f"Conversely, the {n1_desc} {n1_shap} slightly reduced the predicted probability.")
+            sentences.append(f"Sebaliknya, {n1_desc} {n1_shap} sedikit mengurangi probabilitas prediksi.")
 
         # 4. Overall Interpretation
-        sentences.append("Overall, the patient's clinical presentation demonstrates multiple indicators associated with respiratory compromise, making oxygen therapy highly recommended according to the model.")
+        sentences.append("Secara keseluruhan, kondisi klinis pasien menunjukkan beberapa indikator kompromi pernapasan, sehingga terapi oksigen sangat direkomendasikan menurut model.")
 
         # 5. CDSS Disclaimer
-        sentences.append("This explanation is generated directly from SHAP values and should be interpreted as a Clinical Decision Support System (CDSS) recommendation rather than a definitive medical diagnosis.")
+        sentences.append("Penjelasan ini dihasilkan langsung dari nilai SHAP dan harus ditafsirkan sebagai rekomendasi Sistem Dukungan Keputusan Klinis (CDSS), bukan diagnosis medis definitif.")
 
     else:
         # 1. Prediction Sentence
-        sentences.append(f"The model predicts that the patient does not currently require oxygen therapy with a confidence of {confidence:.1f}%.")
+        sentences.append(f"Model memprediksi pasien saat ini tidak memerlukan terapi oksigen dengan keyakinan {confidence:.1f}%.")
 
         # 2. Strongest Contributors supporting No prediction (Negative SHAP)
         top_neg = neg_contribs[:3]
@@ -727,13 +727,13 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             n2_shap = format_shap_value(top_neg[1]["shap_value"])
             n3_shap = format_shap_value(top_neg[2]["shap_value"])
 
-            sentences.append(f"The most influential findings supporting this prediction include {n1_desc} {n1_shap}, {n2_desc} {n2_shap}, and {n3_desc} {n3_shap}.")
+            sentences.append(f"Temuan paling berpengaruh yang mendukung prediksi ini meliputi {n1_desc} {n1_shap}, {n2_desc} {n2_shap}, dan {n3_desc} {n3_shap}.")
         elif len(top_neg) == 2:
             n1_desc = describe_feature(top_neg[0]["feature"], feature_values.get(top_neg[0]["feature"], ""))
             n2_desc = describe_feature(top_neg[1]["feature"], feature_values.get(top_neg[1]["feature"], ""))
             n1_shap = format_shap_value(top_neg[0]["shap_value"])
             n2_shap = format_shap_value(top_neg[1]["shap_value"])
-            sentences.append(f"The most influential findings supporting this prediction include {n1_desc} {n1_shap} and {n2_desc} {n2_shap}.")
+            sentences.append(f"Temuan paling berpengaruh yang mendukung prediksi ini meliputi {n1_desc} {n1_shap} dan {n2_desc} {n2_shap}.")
 
         # 3. Opposing Contributors (Positive SHAP)
         top_pos = pos_contribs[:2]
@@ -744,16 +744,16 @@ def generate_ai_clinical_summary(prediction: int, probability: float, shap_value
             p1_shap = format_shap_value(top_pos[0]["shap_value"])
             p2_shap = format_shap_value(top_pos[1]["shap_value"])
 
-            sentences.append(f"Although {p1_desc} {p1_shap} and {p2_desc} {p2_shap} slightly increased the predicted risk, their overall contribution was outweighed by the patient's stable respiratory condition.")
+            sentences.append(f"Meskipun {p1_desc} {p1_shap} dan {p2_desc} {p2_shap} sedikit meningkatkan risiko prediksi, kontribusi keseluruhannya tertutupi oleh kondisi pernapasan pasien yang stabil.")
         elif len(top_pos) == 1:
             p1_desc = describe_feature(top_pos[0]["feature"], feature_values.get(top_pos[0]["feature"], ""))
             p1_shap = format_shap_value(top_pos[0]["shap_value"])
-            sentences.append(f"Although {p1_desc} {p1_shap} slightly increased the predicted risk, its overall contribution was outweighed by the patient's stable respiratory condition.")
+            sentences.append(f"Meskipun {p1_desc} {p1_shap} sedikit meningkatkan risiko prediksi, kontribusi keseluruhannya tertutupi oleh kondisi pernapasan pasien yang stabil.")
 
         # 4. Overall Interpretation
-        sentences.append("Overall, the patient's clinical findings suggest a relatively low probability of requiring oxygen therapy at this time.")
+        sentences.append("Secara keseluruhan, temuan klinis pasien menunjukkan probabilitas yang relatif rendah untuk membutuhkan terapi oksigen saat ini.")
 
         # 5. Recommendation
-        sentences.append("Clinical monitoring is still recommended should respiratory symptoms worsen.")
+        sentences.append("Monitoring klinis tetap direkomendasikan jika gejala pernapasan memburuk.")
 
     return " ".join(sentences)

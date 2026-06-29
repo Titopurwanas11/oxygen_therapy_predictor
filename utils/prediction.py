@@ -116,15 +116,15 @@ def get_confidence_level(probability: float, prediction: str) -> tuple:
         conf_pct = (1.0 - probability) * 100
 
     if conf_pct >= 95.0:
-        return conf_pct, "Very High", "#166534", "🟢"
+        return conf_pct, "Sangat Tinggi", "#166534", "🟢"
     elif conf_pct >= 90.0:
-        return conf_pct, "High", "#16a34a", "🟢"
+        return conf_pct, "Tinggi", "#16a34a", "🟢"
     elif conf_pct >= 80.0:
-        return conf_pct, "Moderate", "#ca8a04", "🟡"
+        return conf_pct, "Sedang", "#ca8a04", "🟡"
     elif conf_pct >= 70.0:
-        return conf_pct, "Low", "#ea580c", "🟠"
+        return conf_pct, "Rendah", "#ea580c", "🟠"
     else:
-        return conf_pct, "Very Low", "#dc2626", "🔴"
+        return conf_pct, "Sangat Rendah", "#dc2626", "🔴"
 
 
 def get_risk_level(probability: float) -> tuple:
@@ -140,12 +140,12 @@ def get_risk_level(probability: float) -> tuple:
     prob_pct = probability * 100
 
     if prob_pct < 30.0:
-        return "Low Risk", "#16a34a", "🟢"
+        return "Risiko Rendah", "#16a34a", "🟢"
     elif prob_pct < 50.0:
-        return "Low-Moderate Risk", "#84cc16", "🟢"
+        return "Risiko Rendah-Sedang", "#84cc16", "🟢"
     elif prob_pct < 70.0:
-        return "Moderate Risk", "#ca8a04", "🟡"
+        return "Risiko Sedang", "#ca8a04", "🟡"
     elif prob_pct <= 90.0:
-        return "High Risk", "#ea580c", "🟠"
+        return "Risiko Tinggi", "#ea580c", "🟠"
     else:
-        return "Very High Risk", "#dc2626", "🔴"
+        return "Risiko Sangat Tinggi", "#dc2626", "🔴"

@@ -60,13 +60,11 @@ def generate_population_narrative(stats: dict) -> str:
     avg_prob = stats.get("avg_probability", 0.0)
 
     narrative = (
-        f"Among {total} pediatric patients analyzed, the model predicts that {need_oxy} patients "
-        f"({need_oxy_pct:.1f}%) are likely to require oxygen therapy. "
-        f"{high_risk} patients are classified as High Risk while {med_risk} are Medium Risk. "
-        f"The average predicted probability across all patients is {avg_prob:.1f}%. "
-        "These findings suggest that a considerable proportion of the analyzed population "
-        "presents clinical characteristics associated with respiratory compromise. "
-        "This report may assist healthcare professionals in prioritizing patient assessment "
-        "and oxygen resource allocation."
+        f"Dari {total} pasien pediatrik yang dianalisis, model memprediksi bahwa {need_oxy} pasien "
+        f"({need_oxy_pct:.1f}%) kemungkinan membutuhkan terapi oksigen. "
+        f"Sebanyak {high_risk} pasien diklasifikasikan dalam Risiko Tinggi sementara {med_risk} pasien dalam Risiko Sedang. "
+        f"Rata-rata probabilitas prediksi pada seluruh pasien adalah {avg_prob:.1f}%. "
+        "Temuan ini menunjukkan bahwa proporsi pasien yang dianalisis memperlihatkan karakteristik klinis yang terkait dengan gangguan pernapasan. "
+        "Laporan ini dapat membantu tenaga kesehatan dalam memprioritaskan penilaian pasien dan alokasi sumber daya oksigen."
     )
     return narrative
