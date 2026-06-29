@@ -400,21 +400,21 @@ if predict_clicked or st.session_state.get("single_predicted", False):
 
                 # Clinical Risk Badge calculation
                 if prob_yes_pct >= 85:
-                    risk_level = "High Risk"
+                    risk_level = "Risiko Tinggi"
                     risk_badge = "🔴 Risiko Tinggi"
                     risk_color = "#EF4444"
                     risk_color_rgb = (239, 68, 68)
                     risk_bg = "#FEF2F2"
                     risk_border = "#FCA5A5"
                 elif 60 <= prob_yes_pct < 85:
-                    risk_level = "Moderate Risk"
+                    risk_level = "Risiko Sedang"
                     risk_badge = "🟠 Risiko Sedang"
                     risk_color = "#F59E0B"
                     risk_color_rgb = (245, 158, 11)
                     risk_bg = "#FFFBEB"
                     risk_border = "#FCD34D"
                 else:
-                    risk_level = "Low Risk"
+                    risk_level = "Risiko Rendah"
                     risk_badge = "🟢 Risiko Rendah"
                     risk_color = "#22C55E"
                     risk_color_rgb = (34, 197, 94)
@@ -590,7 +590,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         </div>
                         <div style="display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #64748B;">Tingkat Risiko Klinis:</span>
-                            <span class="cdss-badge cdss-badge-{'danger' if risk_level == 'High Risk' else ('warning' if risk_level == 'Moderate Risk' else 'success')}">
+                            <span class="cdss-badge cdss-badge-{'danger' if risk_level == 'Risiko Tinggi' else ('warning' if risk_level == 'Risiko Sedang' else 'success')}">
                                 {risk_level}
                             </span>
                         </div>
@@ -926,15 +926,11 @@ if predict_clicked or st.session_state.get("single_predicted", False):
 
                 # ── Section 5.8: Clinical Recommendation Card ──────────────
                 priority_val = rec_dict["priority"]
-                if priority_val == "Emergency":
-                    border_col = "#B91C1C"
-                    badge_class = "cdss-badge-danger"
-                    priority_text = "Darurat"
-                elif priority_val == "High":
+                if priority_val in ["Darurat", "Emergency", "Tinggi"]:
                     border_col = "#B45309"
-                    badge_class = "cdss-badge-warning"
+                    badge_class = "cdss-badge-danger"
                     priority_text = "Tinggi"
-                elif priority_val == "Medium":
+                elif priority_val == "Sedang":
                     border_col = "#B45309"
                     badge_class = "cdss-badge-warning"
                     priority_text = "Sedang"

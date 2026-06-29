@@ -298,7 +298,7 @@ def generate_batch_pdf_report(
     top_patients_rows = [[
         Paragraph("Patient ID", style_table_header),
         Paragraph("Risk (Prob)", style_table_header),
-        Paragraph("Priority", style_table_header),
+        Paragraph("Prioritas", style_table_header),
         Paragraph("Primary Recommendation Action", style_table_header)
     ]]
 
@@ -306,18 +306,16 @@ def generate_batch_pdf_report(
         patient_id = row.get("Patient ID", f"Patient #{row.name + 1}")
         prob = row["Probability"]
         risk = row["Risk Level"]
-        priority = row.get("Priority", "Low")
+        priority = row.get("Priority", "Rendah")
         rec_action = row.get("Recommendation", "N/A")
         
         # Format primary action (take first bullet point)
         first_action = rec_action.split(";")[0] if rec_action != "N/A" else "N/A"
         
         # Color code priority
-        if priority == "Emergency":
+        if priority in ["Darurat", "Emergency", "Tinggi"]:
             prio_color = "#dc2626"
-        elif priority == "High":
-            prio_color = "#ea580c"
-        elif priority == "Medium":
+        elif priority == "Sedang":
             prio_color = "#ca8a04"
         else:
             prio_color = "#16a34a"

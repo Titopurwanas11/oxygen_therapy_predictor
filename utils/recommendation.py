@@ -8,63 +8,56 @@ def get_base_rule_recommendation(prediction: str, prob_pct: float, risk_normaliz
     priority = "Rendah"
     actions = []
     monitoring = []
-    
-    # RULE 1: Prediction Yes, Risk High (or Very High), Prob >= 90%
-    if (prediction == "Yes" or prediction == 1) and "high" in risk_normalized and prob_pct >= 90.0:
-        priority = "Darurat"
-        actions = [
-            "Evaluasi terapi oksigen segera direkomendasikan.",
-            "Nilai distress pernapasan secara mendesak.",
-            "Siapkan dukungan oksigen sesuai protokol rumah sakit.",
-            "Penilaian pediatrik darurat disarankan."
-        ]
-        monitoring = ["Monitoring oximetri pulsa kontinu."]
-        
-    # RULE 2: Prediction Yes, Risk High (or Very High), Prob 80-89%
-    elif (prediction == "Yes" or prediction == 1) and "high" in risk_normalized and prob_pct >= 80.0:
+
+    # Assign priority entirely based on the risk category.
+    if "tinggi" in risk_normalized:
         priority = "Tinggi"
-        actions = [
-            "Pertimbangkan terapi oksigen.",
-            "Ulangi pengukuran SpO₂.",
-            "Evaluasi ulang dalam 30 menit."
-        ]
-        monitoring = ["Pantau status pernapasan secara ketat."]
-        
-    # RULE 3: Prediction Yes, Risk Medium (or Moderate)
-    elif (prediction == "Yes" or prediction == 1) and ("medium" in risk_normalized or "moderate" in risk_normalized):
+    elif "sedang" in risk_normalized:
         priority = "Sedang"
+    else:
+        priority = "Rendah"
+
+    # RULE 1: High risk cases
+    if "tinggi" in risk_normalized:
+        if (prediction == "Yes" or prediction == 1) and prob_pct >= 90.0:
+            actions = [
+                "Evaluasi terapi oksigen segera direkomendasikan.",
+                "Nilai distress pernapasan secara mendesak.",
+                "Siapkan dukungan oksigen sesuai protokol rumah sakit.",
+                "Penilaian pediatrik darurat disarankan."
+            ]
+            monitoring = ["Monitoring oximetri pulsa kontinu."]
+        elif (prediction == "Yes" or prediction == 1) and prob_pct >= 80.0:
+            actions = [
+                "Pertimbangkan terapi oksigen.",
+                "Ulangi pengukuran SpO₂.",
+                "Evaluasi ulang dalam 30 menit."
+            ]
+            monitoring = ["Pantau status pernapasan secara ketat."]
+        else:
+            actions = [
+                "Pasien harus diawasi secara ketat.",
+                "Ulangi penilaian klinis jika gejala memburuk."
+            ]
+            monitoring = ["Pantau saturasi oksigen secara berkala."]
+
+    # RULE 2: Medium risk cases
+    elif "sedang" in risk_normalized:
         actions = [
             "Pasien harus diawasi secara ketat.",
             "Ulangi penilaian klinis jika gejala memburuk."
         ]
         monitoring = ["Pantau saturasi oksigen secara berkala."]
-        
-    # RULE 4: Prediction No, Risk Low (or Low-Moderate)
-    elif (prediction == "No" or prediction == 0) and "low" in risk_normalized:
-        priority = "Rendah"
+
+    # RULE 3: Low risk cases
+    else:
         actions = [
             "Observasi rutin direkomendasikan.",
             "Lanjutkan perawatan suportif standar.",
             "Ulangi penilaian jika gejala pernapasan baru muncul."
         ]
         monitoring = ["Pemeriksaan tanda vital rutin."]
-        
-    # Fallbacks for other states (e.g. Risk is Low but prediction is Yes, or Risk is Medium but prediction is No)
-    elif prediction == "Yes" or prediction == 1:
-        priority = "Sedang"
-        actions = [
-            "Pasien harus diawasi secara ketat.",
-            "Evaluasi ulang status pernapasan jika kondisi berubah."
-        ]
-        monitoring = ["Pantau saturasi oksigen secara berkala."]
-    else:
-        priority = "Rendah"
-        actions = [
-            "Observasi rutin direkomendasikan.",
-            "Evaluasi ulang jika gejala pernapasan baru berkembang."
-        ]
-        monitoring = ["Panduan monitoring keperawatan standar."]
-        
+
     return priority, actions, monitoring
 
 

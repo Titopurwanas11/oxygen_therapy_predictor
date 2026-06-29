@@ -420,15 +420,11 @@ def generate_pdf_report(
     if recommendation:
         # Determine color of Priority and badge
         prio = recommendation.get("priority", "Low")
-        if prio == "Emergency":
+        if prio in ["Darurat", "Emergency", "Tinggi"]:
             prio_color = "#dc2626"
             prio_bg = "#fdf2f2"
             prio_border = "#fecaca"
-        elif prio == "High":
-            prio_color = "#ea580c"
-            prio_bg = "#fffbeb"
-            prio_border = "#fed7aa"
-        elif prio == "Medium":
+        elif prio == "Sedang":
             prio_color = "#ca8a04"
             prio_bg = "#fef9c3"
             prio_border = "#fef08a"
@@ -450,7 +446,7 @@ def generate_pdf_report(
             ],
             [
                 Paragraph("Tingkat Prioritas:", style_body),
-                Paragraph(f"<b>{prio} Priority</b>", style_prio)
+                Paragraph(f"<b>{prio}</b>", style_prio)
             ],
             [
                 Paragraph("Sumber Rekomendasi:", style_body),

@@ -43,13 +43,20 @@ def st_html(html_str):
 st_html("""
 <style>
     /* Page-specific overrides only */
-    div.stDownloadButton > button,
+    div.stDownloadButton > button {
+        background-color: #2563EB !important;
+        color: #FFFFFF !important;
+        border-color: #2563EB !important;
+    }
+    div.stDownloadButton > button:hover {
+        background-color: #1D4ED8 !important;
+        border-color: #1D4ED8 !important;
+    }
     div.stButton > button {
         background-color: #0F172A !important;
         color: #FFFFFF !important;
         border-color: #0F172A !important;
     }
-    div.stDownloadButton > button:hover,
     div.stButton > button:hover {
         background-color: #1E293B !important;
         border-color: #1E293B !important;
@@ -340,7 +347,7 @@ if uploaded_file is not None:
             with f1:
                 filter_pred = st.selectbox("Hasil Prediksi", ["Semua", "Yes", "No"])
             with f2:
-                filter_risk = st.selectbox("Tingkat Risiko", ["Semua", "Low Risk", "Low-Moderate Risk", "Moderate Risk", "High Risk", "Very High Risk"])
+                filter_risk = st.selectbox("Tingkat Risiko", ["Semua", "Risiko Rendah", "Risiko Rendah-Sedang", "Risiko Sedang", "Risiko Tinggi", "Risiko Sangat Tinggi"])
             with f3:
                 min_prob, max_prob = st.slider("Rentang Probabilitas (%)", 0.0, 100.0, (0.0, 100.0))
             with f4:
@@ -413,7 +420,7 @@ if uploaded_file is not None:
             with dl1:
                 if excel_ok:
                     st.download_button(
-                        label="⬇️ Unduh File Excel",
+                        label="Unduh File Excel",
                         data=excel_buffer,
                         file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -425,7 +432,7 @@ if uploaded_file is not None:
             csv_buffer = final_df.to_csv(index=False).encode("utf-8")
             with dl2:
                 st.download_button(
-                    label="⬇️ Unduh File CSV",
+                    label="Unduh File CSV",
                     data=csv_buffer,
                     file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.csv",
                     mime="text/csv",
@@ -448,7 +455,7 @@ if uploaded_file is not None:
             with dl3:
                 if pdf_report_bytes:
                     st.download_button(
-                        label="⬇️ Unduh Laporan PDF",
+                        label="Unduh Laporan PDF",
                         data=pdf_report_bytes,
                         file_name=f"OxyPredict_Batch_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                         mime="application/pdf",
