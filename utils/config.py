@@ -270,6 +270,12 @@ def _get_global_css():
     """Return the unified global CSS for the entire application."""
     return """
     <style>
+        /* ================================================================
+           IMPORT GOOGLE FONTS & MATERIAL SYMBOLS OUTLINED
+           ================================================================ */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
+
         /* Hide default navigation */
         [data-testid="stSidebarNav"] {
             display: none !important;
@@ -369,12 +375,6 @@ def _get_global_css():
             background-color: #22C55E;
             box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
         }
-
-        /* ================================================================
-           IMPORT GOOGLE FONTS & MATERIAL SYMBOLS OUTLINED
-           ================================================================ */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
 
         /* ================================================================
            GLOBAL RESET & APP BACKGROUND
@@ -887,7 +887,7 @@ def _get_global_css():
     </style>
     """
 
-def _get_logo_html():
+def _get_logo_html(active_page="dashboard"):
     """Return the custom sidebar logo and navigation HTML."""
     import os
     import base64
@@ -906,13 +906,18 @@ def _get_logo_html():
     else:
         logo_img = '<div class="sidebar-logo-img" style="display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🫁</div>'
     
+    dashboard_active = "active" if active_page == "dashboard" else ""
+    single_active = "active" if active_page == "single" else ""
+    batch_active = "active" if active_page == "batch" else ""
+    clinical_active = "active" if active_page == "clinical" else ""
+    
     return f"""
     <div class="sidebar-logo-header">
         {logo_img}
     </div>
     
     <div class="sidebar-nav-menu">
-        <a href="/" class="sidebar-nav-item" id="nav-dashboard">
+        <a href="/" target="_self" class="sidebar-nav-item {dashboard_active}" id="nav-dashboard">
             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                 <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -920,7 +925,7 @@ def _get_logo_html():
             <span>Dashboard</span>
         </a>
         
-        <a href="/Single_Prediction" class="sidebar-nav-item" id="nav-single">
+        <a href="/Single_Prediction" target="_self" class="sidebar-nav-item {single_active}" id="nav-single">
             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                 <circle cx="12" cy="7" r="4"></circle>
@@ -928,7 +933,7 @@ def _get_logo_html():
             <span>Single Prediction</span>
         </a>
         
-        <a href="/Batch_Prediction" class="sidebar-nav-item" id="nav-batch">
+        <a href="/Batch_Prediction" target="_self" class="sidebar-nav-item {batch_active}" id="nav-batch">
             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
                 <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
@@ -936,7 +941,7 @@ def _get_logo_html():
             <span>Batch Prediction</span>
         </a>
         
-        <a href="/Clinical_Decision_Guide" class="sidebar-nav-item" id="nav-clinical">
+        <a href="/Clinical_Decision_Guide" target="_self" class="sidebar-nav-item {clinical_active}" id="nav-clinical">
             <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
             </svg>
@@ -948,22 +953,6 @@ def _get_logo_html():
             <div class="sidebar-status-dot"></div>
         </div>
     </div>
-    
-    <script>
-        // Set active navigation based on current page
-        const currentPath = window.location.pathname;
-        const navItems = document.querySelectorAll('.sidebar-nav-item');
-        
-        navItems.forEach(item => {{
-            const href = item.getAttribute('href');
-            if ((currentPath === '/' && href === '/') || 
-                (currentPath.includes('Single_Prediction') && href.includes('Single')) ||
-                (currentPath.includes('Batch_Prediction') && href.includes('Batch')) ||
-                (currentPath.includes('Clinical_Decision_Guide') && href.includes('Clinical'))) {{
-                item.classList.add('active');
-            }}
-        }});
-    </script>
     """
 
 
@@ -1069,13 +1058,48 @@ def st_html(html_str):
 def setup_page(page_title: str):
     """Set up page with unified CSS, sidebar branding, and consistent design system."""
     import streamlit as st
+    import os
+    import inspect
+
+    # Determine active page based on caller file or title fallback
+    active_page = "dashboard"
+    
+    # Fallback checking based on page_title
+    title_lower = page_title.lower()
+    if "single" in title_lower or "prediksi pasien" in title_lower:
+        active_page = "single"
+    elif "batch" in title_lower:
+        active_page = "batch"
+    elif "clinical" in title_lower:
+        active_page = "clinical"
+
+    # Stack-based detection (more precise)
+    try:
+        for frame in inspect.stack():
+            filename = frame.filename
+            if "config.py" not in filename:
+                basename = os.path.basename(filename)
+                if "Single_Prediction" in basename:
+                    active_page = "single"
+                    break
+                elif "Batch_Prediction" in basename:
+                    active_page = "batch"
+                    break
+                elif "Clinical_Decision_Guide" in basename:
+                    active_page = "clinical"
+                    break
+                elif "app.py" in basename:
+                    active_page = "dashboard"
+                    break
+    except Exception:
+        pass
 
     # 1. Global CSS
     st_html(_get_global_css())
 
     # 2. Custom Sidebar with Logo and Navigation
     with st.sidebar:
-        st_html(_get_logo_html())
+        st_html(_get_logo_html(active_page))
 
 
 # =============================================================================
