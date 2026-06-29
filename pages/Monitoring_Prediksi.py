@@ -2,6 +2,7 @@
 Monitoring Prediksi — Halaman pemantauan aktivitas klinis dan log prediksi OxyPredict.
 """
 
+import io
 import streamlit as st
 import pandas as pd
 import plotly.express as px
@@ -167,23 +168,92 @@ else:
 
     st_html(render_section_divider())
 
+    df_history["Datetime"] = pd.to_datetime(df_history["Timestamp"], errors="coerce")
+    df_history["Tanggal"] = df_history["Datetime"].dt.date
+    df_history["Bulan"] = df_history["Datetime"].dt.month
+    df_history["Tahun"] = df_history["Datetime"].dt.year
+
+    unique_years = sorted(df_history["Tahun"].dropna().unique().astype(int).tolist())
+    if not unique_years:
+        unique_years = [pd.to_datetime("today").year]
+
+    month_names = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"]
+    month_map = {name: idx + 1 for idx, name in enumerate(month_names)}
+
+    log_options = [5, 10, 15, 20, 25, 30, 35, 40, 45, 50, "Semua"]
+    st_html("""
+    <div class="cdss-card" style="margin-bottom: 1rem;">
+        <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">Filter Log Prediksi</h4>
+    """)
+    f1, f2, f3, f4 = st.columns([1, 1, 1, 1])
+    with f1:
+        selected_count = st.selectbox("Jumlah Log", log_options, index=1)
+    with f2:
+        date_filter_type = st.selectbox("Filter Periode", ["Semua", "Hari", "Bulan", "Tahun"])
+    with f3:
+        if date_filter_type == "Hari":
+            selected_date = st.date_input("Pilih Tanggal", value=df_history["Tanggal"].max())
+        elif date_filter_type == "Bulan":
+            selected_month = st.selectbox("Pilih Bulan", month_names, index=(df_history["Bulan"].max() - 1) if 1 <= df_history["Bulan"].max() <= 12 else 0)
+            selected_year = st.selectbox("Pilih Tahun", unique_years, index=len(unique_years) - 1)
+        elif date_filter_type == "Tahun":
+            selected_year = st.selectbox("Pilih Tahun", unique_years, index=len(unique_years) - 1)
+    with f4:
+        sort_order = st.selectbox("Urutkan", ["Terbaru ke Terlama", "Terlama ke Terbaru"])
+    st_html("""
+    </div>
+    """)
+
+    filtered_df = df_history.copy()
+    if date_filter_type == "Hari":
+        filtered_df = filtered_df[filtered_df["Tanggal"] == selected_date]
+    elif date_filter_type == "Bulan":
+        filtered_df = filtered_df[
+            (filtered_df["Bulan"] == month_map[selected_month]) &
+            (filtered_df["Tahun"] == selected_year)
+        ]
+    elif date_filter_type == "Tahun":
+        filtered_df = filtered_df[filtered_df["Tahun"] == selected_year]
+
+    filtered_df = filtered_df.sort_values("Datetime", ascending=(sort_order == "Terlama ke Terbaru"))
+
+    if selected_count != "Semua":
+        display_df = filtered_df.head(int(selected_count)).copy()
+    else:
+        display_df = filtered_df.copy()
+
+    st_html(f"<p style='margin: 0 0 1rem; color: #334155; font-size: 0.95rem;'>Menampilkan {len(display_df)} dari {len(filtered_df)} log yang sesuai filter.</p>")
+
     # ─── LOG PREDIKSI TERBARU & STATISTIK ─────────────────────────────────
     col_table, col_stats = st.columns([2, 1])
 
     with col_table:
         st_html("""
         <div class="cdss-card" style="height: 100%;">
-            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">Log Prediksi Terbaru (10 Terakhir)</h4>
+            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">Log Prediksi Terbaru</h4>
         """)
-        recent_df = df_history.tail(10).iloc[::-1].copy()
         recent_table_df = pd.DataFrame({
-            "Waktu Prediksi": recent_df["Timestamp"],
-            "Usia Pasien (bln)": recent_df["Age"].astype(int),
-            "Hasil Prediksi": recent_df["Prediction"].map({"Yes": "Butuh Oksigen", "No": "Tidak Butuh"}),
-            "Tingkat Keyakinan": recent_df["Confidence"].map(lambda x: f"{x:.1f}%"),
-            "Tingkat Risiko": recent_df["Risk Level"]
+            "Waktu Prediksi": display_df["Timestamp"].astype(str),
+            "Usia Pasien (bln)": display_df["Age"].fillna(0).astype(int),
+            "Hasil Prediksi": display_df["Prediction"].map({"Yes": "Butuh Oksigen", "No": "Tidak Butuh"}),
+            "Tingkat Keyakinan": display_df["Confidence"].map(lambda x: f"{x:.1f}%"),
+            "Tingkat Risiko": display_df["Risk Level"]
         })
         st.dataframe(recent_table_df, use_container_width=True, hide_index=True)
+
+        if not display_df.empty:
+            excel_buffer = io.BytesIO()
+            with pd.ExcelWriter(excel_buffer, engine="openpyxl") as writer:
+                display_df.to_excel(writer, index=False, sheet_name="LogPrediksi")
+            excel_buffer.seek(0)
+            st.download_button(
+                label="Unduh Log Excel",
+                data=excel_buffer,
+                file_name=f"OxyPredict_Log_Prediksi_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                use_container_width=True,
+            )
+
         st_html("</div>")
 
     with col_stats:
