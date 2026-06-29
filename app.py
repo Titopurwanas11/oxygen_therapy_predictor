@@ -31,7 +31,7 @@ def st_html(html_str):
 
 # ─── SECTION 1: COMPACT CDSS HEADER ──────────────────────────────────────────
 st_html(render_page_header(
-    "🩺",
+    "",
     "Selamat Datang di OxyPredict",
     "Sistem Pendukung Keputusan Klinis (Clinical Decision Support System / CDSS) untuk Terapi Oksigen Pasien Anak."
 ))
@@ -53,7 +53,7 @@ st_html(render_section_divider())
 
 # ─── SECTION 3: SYSTEM PERFORMANCE & INFO ────────────────────────────────────
 st_html("""
-<h3 class="section-title-custom">⚙️ Kinerja Model & Informasi Sistem</h3>
+<h3 class="section-title-custom">Kinerja Model & Informasi Sistem</h3>
 """)
 
 col1, col2 = st.columns(2)
@@ -113,8 +113,8 @@ st_html(render_section_divider())
 # ─── SECTION 4: MEDICAL DISCLAIMER ──────────────────────────────────────────
 st_html("""
 <div class="cdss-card" style="border-left: 5px solid #EF4444; background-color: #FEF2F2;">
-    <h4 style="margin-top: 0; color: #B91C1C; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        ⚠️ Peringatan Medis (Medical Disclaimer)
+    <h4 style="margin-top: 0; color: #B91C1C; font-size: 16px; font-weight: 700;">
+        Peringatan Medis (Medical Disclaimer)
     </h4>
     <p style="color: #991B1B; font-size: 14px; line-height: 1.6; margin: 0; font-weight: 500;">
         OxyPredict merupakan Sistem Pendukung Keputusan Klinis (Clinical Decision Support System/CDSS) yang dirancang untuk membantu tenaga kesehatan dalam memperkirakan kebutuhan terapi oksigen berdasarkan data klinis pasien.

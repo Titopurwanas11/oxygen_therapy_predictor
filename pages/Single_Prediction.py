@@ -61,7 +61,7 @@ def get_pdf_download_link(pdf_bytes: bytes, filename: str) -> str:
         f'<a href="data:application/pdf;base64,{encoded}" download="{filename}" '
         f'style="display:inline-block;padding:0.8rem 1rem;border-radius:0.75rem;'
         f'background-color:#2563EB;color:#ffffff;font-weight:700;text-decoration:none;'
-        f'box-shadow:0 10px 20px rgba(37,99,235,0.12);">📄 Unduh Laporan Klinis (PDF)</a>'
+        f'box-shadow:0 10px 20px rgba(37,99,235,0.12);">Unduh Laporan Klinis (PDF)</a>'
     )
 
 # ─── Custom Layout Styling ───────────────────────────────────────────────────
@@ -79,7 +79,7 @@ st_html("""
 
 # ─── Header ──────────────────────────────────────────────────────────────────
 st_html(render_page_header(
-    "🩺",
+    "",
     "Prediksi Pasien",
     "Sistem Pendukung Keputusan Klinis untuk Prediksi Kebutuhan Terapi Oksigen pada Pasien."
 ))
@@ -118,7 +118,7 @@ header_placeholder = st.empty()
 alerts_placeholder = st.empty()
 
 # ─── Patient Input Form ──────────────────────────────────────────────────────
-st_html("<h3 class=\"section-title-custom\">📋 Formulir Data Klinis Pasien</h3>")
+st_html("<h3 class=\"section-title-custom\">Formulir Data Klinis Pasien</h3>")
 
 patient_data = {}
 tab_names = list(FEATURE_GROUPS.keys())
@@ -226,31 +226,31 @@ alerts = []
 if sao2 < 90:
     alerts.append({
         "type": "danger",
-        "title": "🚨 Hipoksemia Berat",
+        "title": "Hipoksemia Berat",
         "desc": f"Saturasi oksigen (SaO2) sangat rendah pada <strong>{sao2:.1f}%</strong>. Pemberian oksigen segera sangat diperlukan."
     })
 if is_tachypnea:
     alerts.append({
         "type": "warning",
-        "title": "⚠️ Takipnea Terdeteksi",
+        "title": "Takipnea Terdeteksi",
         "desc": f"Laju pernapasan meningkat pada <strong>{rr} bpm</strong> untuk pasien usia {age_months} bulan. Menunjukkan distres pernapasan."
     })
 if temp > 38.5:
     alerts.append({
         "type": "warning",
-        "title": "🌡️ Demam Tinggi",
+        "title": "Demam Tinggi",
         "desc": f"Suhu aksila pasien meningkat pada <strong>{temp:.1f}°C</strong>, menunjukkan demam signifikan."
     })
 if wheezing == "Yes":
     alerts.append({
         "type": "info",
-        "title": "🫁 Wheezing Terdengar",
+        "title": "Wheezing Terdengar",
         "desc": "Suara napas tambahan terdeteksi. Mengindikasikan obstruksi saluran napas atau bronkospasme."
     })
 if nasal_flaring == "Yes":
     alerts.append({
         "type": "warning",
-        "title": "⚠️ Tanda Distres Pernapasan",
+        "title": "Tanda Distres Pernapasan",
         "desc": "Napas cuping hidung terdeteksi, menunjukkan peningkatan usaha bernapas dan penggunaan otot bantu pernapasan."
     })
 
@@ -258,8 +258,7 @@ if nasal_flaring == "Yes":
 with header_placeholder.container():
     st_html(f"""
     <div class="cdss-card">
-        <h4 style="margin: 0 0 1rem 0; color: #0F172A; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 0.5rem;">
-            <span class="material-symbols-outlined" style="font-size: 22px; color: #2563EB; vertical-align: middle;">person</span>
+        <h4 style="margin: 0 0 1rem 0; color: #0F172A; font-weight: 700; font-size: 18px;">
             Ikhtisar Pasien
         </h4>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem;">
@@ -307,7 +306,7 @@ with header_placeholder.container():
 with alerts_placeholder.container():
     if alerts:
         st_html("<div style='margin-bottom: 1.5rem;'>")
-        st_html("<h4 style='color: #0F172A; font-size: 18px; font-weight: 700; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;'><span class=\"material-symbols-outlined\" style=\"font-size: 20px; color: #B45309;\">warning</span> Peringatan Klinis Real-time</h4>")
+        st_html("<h4 style='color: #0F172A; font-size: 18px; font-weight: 700; margin-bottom: 0.8rem;'>Peringatan Klinis Real-time</h4>")
         for alert in alerts:
             if alert["type"] == "danger":
                 bg = "#FEF2F2"
@@ -373,7 +372,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     break
                     
         if not is_valid:
-            show_warning_card("⚠️ Data Input Pasien Tidak Valid", val_err)
+            show_warning_card("Data Input Pasien Tidak Valid", val_err)
             st.stop()
 
         with st.spinner("Memproses Prediksi Klinis..."):
@@ -562,7 +561,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             pdf_report_bytes = res["pdf_report_bytes"]
 
             st.markdown("<br>", unsafe_allow_html=True)
-            st_html("<h3 class=\"section-title-custom\">🔮 Hasil Prediksi & Analisis Klinis</h3>")
+            st_html("<h3 class=\"section-title-custom\">Hasil Prediksi & Analisis Klinis</h3>")
             
             col_res_left, col_res_right = st.columns([3, 2])
 
@@ -732,7 +731,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             st_html("""
             <div class="cdss-card" style="border-left: 6px solid #0F4C75; margin-bottom: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.6rem;">
-                    <span class="material-symbols-outlined" style="font-size: 26px; color: #0F4C75;">psychology</span>
                     <h2 style="margin: 0; color: #0F172A; font-size: 22px; font-weight: 700;">Penjelasan Prediksi Berbasis SHAP</h2>
                 </div>
                 <p style="margin: 0; color: #64748B; font-size: 15px; line-height: 1.6;">
@@ -748,7 +746,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
 
                 # ── Section 3: Top 10 Features Table ──────────────────────
-                st_html("<h3 class=\"section-title-custom\">📊 10 Fitur dengan Pengaruh Terbesar</h3>")
+                st_html("<h3 class=\"section-title-custom\">10 Fitur dengan Pengaruh Terbesar</h3>")
                 st_html("<p style='color: #64748b; font-size: 0.82rem; margin-top: -0.5rem; margin-bottom: 1rem;'>Fitur diurutkan berdasarkan nilai SHAP absolut — menunjukkan pengaruh terkuat terhadap prediksi ini:</p>")
 
                 table_rows = ""
@@ -768,7 +766,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     table_rows += f"""
                     <tr style="background-color: {row_bg};">
                         <td style="padding: 0.7rem 1rem; font-weight: 600; color: #1E293B; font-size: 0.82rem; border-bottom: 1px solid #EAF2F8;">
-                            {get_shap_feature_icon(sv['feature'])} {sv['feature']}
+                            {sv['feature']}
                         </td>
                         <td style="padding: 0.7rem 1rem; color: #1E293B; font-size: 0.82rem; border-bottom: 1px solid #EAF2F8; text-align: center;">
                             <strong>{sv['patient_value']}</strong>
@@ -810,7 +808,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 """)
 
                 # ── Section 4: Positive / Negative Split ──────────────────
-                st_html("<h3 class=\"section-title-custom\">⚖️ Arah Dampak Fitur</h3>")
+                st_html("<h3 class=\"section-title-custom\">Arah Dampak Fitur</h3>")
 
                 col_pos, col_neg = st.columns(2)
 
@@ -819,7 +817,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     for pf in positive_factors[:6]:
                         pos_items += f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #FEF2F2;">
-                            <span style="font-size: 0.8rem; color: #EF4444; font-weight: 500;">{get_shap_feature_icon(pf['feature'])} {pf['feature']}</span>
+                            <span style="font-size: 0.8rem; color: #EF4444; font-weight: 500;">{pf['feature']}</span>
                             <span style="font-family: monospace; font-weight: 700; color: #EF4444; font-size: 0.8rem;">+{pf['shap_value']:.4f}</span>
                         </div>
                         """
@@ -827,8 +825,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         pos_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>Tidak ada faktor positif signifikan</p>"
                     st_html(f"""
                     <div class="cdss-card" style="border-top: 4px solid #EF4444; height: 100%;">
-                        <div style="font-size: 16px; font-weight: 700; color: #EF4444; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
-                            <span class="material-symbols-outlined" style="font-size: 20px;">trending_up</span>
+                        <div style="font-size: 16px; font-weight: 700; color: #EF4444; margin-bottom: 0.8rem;">
                             Fitur yang Meningkatkan Prediksi
                         </div>
                         {pos_items}
@@ -840,7 +837,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     for nf in negative_factors[:6]:
                         neg_items += f"""
                         <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #EFF6FF;">
-                            <span style="font-size: 0.8rem; color: #3282B8; font-weight: 500;">{get_shap_feature_icon(nf['feature'])} {nf['feature']}</span>
+                            <span style="font-size: 0.8rem; color: #3282B8; font-weight: 500;">{nf['feature']}</span>
                             <span style="font-family: monospace; font-weight: 700; color: #3282B8; font-size: 0.8rem;">{nf['shap_value']:.4f}</span>
                         </div>
                         """
@@ -848,8 +845,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         neg_items = "<p style='color: #94a3b8; font-size: 0.8rem; font-style: italic;'>Tidak ada faktor negatif signifikan</p>"
                     st_html(f"""
                     <div class="cdss-card" style="border-top: 4px solid #3282B8; height: 100%;">
-                        <div style="font-size: 16px; font-weight: 700; color: #3282B8; margin-bottom: 0.8rem; display: flex; align-items: center; gap: 0.4rem;">
-                            <span class="material-symbols-outlined" style="font-size: 20px;">trending_down</span>
+                        <div style="font-size: 16px; font-weight: 700; color: #3282B8; margin-bottom: 0.8rem;">
                             Fitur yang Menurunkan Prediksi
                         </div>
                         {neg_items}
@@ -857,7 +853,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     """)
 
                 # ── Section 5: Interactive Plotly SHAP Bar Chart ──────────
-                st_html("<h3 class=\"section-title-custom\">📈 Distribusi Nilai SHAP (Interaktif)</h3>")
+                st_html("<h3 class=\"section-title-custom\">Distribusi Nilai SHAP (Interaktif)</h3>")
 
                 if use_plotly:
                     chart_data = list(reversed(top_10))
@@ -899,13 +895,12 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         'displaylogo': False,
                     })
                 else:
-                    st.info("ℹ️ Instal Plotly (`pip install plotly`) untuk grafik SHAP interaktif.")
+                    st.info("Instal Plotly (`pip install plotly`) untuk grafik SHAP interaktif.")
 
                 # ── Section 5.5: AI Clinical Summary (Explainable AI) ─────
                 st_html(f"""
                 <div class="cdss-card" style="border-left: 6px solid #3282B8; margin-top: 1.5rem; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;">
-                        <span class="material-symbols-outlined" style="font-size: 28px; color: #3282B8; line-height: 1; flex-shrink: 0;">psychology</span>
                         <div>
                             <h4 style="margin: 0; color: #0F172A; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; line-height: 1.2;">
                                 Ringkasan Klinis AI
@@ -956,7 +951,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 <div class="cdss-card" style="border-left: 6px solid {border_col}; margin-top: 1.5rem; margin-bottom: 2rem;">
                     <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.2rem;">
                         <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <span class="material-symbols-outlined" style="font-size: 24px; color: {border_col}; line-height: 1;">assignment</span>
                             <div>
                                 <h4 style="margin: 0; color: #0F172A; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; line-height: 1.2;">
                                     Rekomendasi Klinis
@@ -1012,7 +1006,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                     margin-bottom: 2rem;
                 ">
                     <h4 style="margin: 0 0 0.6rem 0; color: #1D4ED8; font-weight: 700; font-size: 18px; display: flex; align-items: center; gap: 0.4rem;">
-                        <span class="material-symbols-outlined" style="font-size: 22px; color: #1D4ED8; vertical-align: middle;">lightbulb</span>
                         Interpretasi Klinis
                     </h4>
                     <p style="margin: 0; color: #1D4ED8; font-size: 16px; line-height: 1.7;">
@@ -1022,13 +1015,12 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 """)
 
                 # ── Section 7: Top 5 Feature Importance Cards ─────────────
-                st_html("<h3 class=\"section-title-custom\">🏆 5 Fitur Paling Berpengaruh</h3>")
+                st_html("<h3 class=\"section-title-custom\">5 Fitur Paling Berpengaruh</h3>")
 
                 top_5_shap = shap_values_list[:5]
                 cols_top5 = st.columns(5)
                 for idx, sv in enumerate(top_5_shap):
                     shap_val = sv["shap_value"]
-                    icon = get_shap_feature_icon(sv["feature"])
                     if shap_val > 0:
                         card_bg = "#fdf2f2"
                         card_border = "#fecaca"
@@ -1054,7 +1046,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                             transition: all 0.25s ease;
                         ">
                             <div>
-                                <div style="font-size: 1.5rem; margin-bottom: 0.3rem;">{icon}</div>
                                 <div style="font-size: 13px; font-weight: 700; color: #0F172A; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                                     {sv['feature']}
                                 </div>
@@ -1071,7 +1062,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 st.markdown("")
 
                 # ── Section 8: Explainability Summary ─────────────────────
-                st_html("<h3 class=\"section-title-custom\">📋 Ringkasan Eksplanabilitas Model</h3>")
+                st_html("<h3 class=\"section-title-custom\">Ringkasan Eksplanabilitas Model</h3>")
 
                 n_positive = len(positive_factors)
                 n_negative = len(negative_factors)
@@ -1111,7 +1102,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             # CDSS Disclaimer block
             st_html("""
             <div class="cdss-card" style="display: flex; align-items: flex-start; gap: 0.8rem; margin-top: 1.5rem;">
-                <span class="material-symbols-outlined" style="font-size: 22px; color: #64748B; flex-shrink: 0; margin-top: 0.1rem;">info</span>
                 <p style="margin: 0; color: #64748B; font-size: 14px; line-height: 1.6;">
                     <strong>Peringatan:</strong> Rekomendasi ini dihasilkan oleh model prediksi dan hanya boleh digunakan sebagai alat bantu keputusan klinis (CDSS). Keputusan medis akhir tetap menjadi tanggung jawab tenaga kesehatan profesional yang berkualifikasi.
                 </p>

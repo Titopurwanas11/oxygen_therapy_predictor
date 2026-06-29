@@ -43,18 +43,29 @@ def st_html(html_str):
 st_html("""
 <style>
     /* Page-specific overrides only */
+    div.stDownloadButton > button,
+    div.stButton > button {
+        background-color: #0F172A !important;
+        color: #FFFFFF !important;
+        border-color: #0F172A !important;
+    }
+    div.stDownloadButton > button:hover,
+    div.stButton > button:hover {
+        background-color: #1E293B !important;
+        border-color: #1E293B !important;
+    }
 </style>
 """)
 
 # ─── Header ──────────────────────────────────────────────────────────────────
 st_html(render_page_header(
-    "📂",
+    "",
     "Prediksi Massal Pasien",
     "Sistem Pendukung Keputusan Klinis untuk Analisis Kebutuhan Terapi Oksigen pada Populasi Pasien."
 ))
 
 # ─── SECTION 1: UPLOAD ───────────────────────────────────────────────────────
-st_html("<h3 class=\"section-title-custom\">📁 Bagian 1: Unggah Data Pasien</h3>")
+st_html("<h3 class=\"section-title-custom\">Unggah Data Pasien</h3>")
 
 col_upload_left, col_upload_right = st.columns([3, 2])
 
@@ -81,7 +92,7 @@ with col_upload_right:
     """)
 
 # ─── Show required columns ──────────────────────────────────────────────────
-with st.expander("📋 Lihat Daftar Kolom yang Diperlukan (44 fitur)", expanded=False):
+with st.expander("Lihat Daftar Kolom yang Diperlukan (44 fitur)", expanded=False):
     col_a, col_b = st.columns(2)
     half = len(ALL_FEATURES) // 2 + 1
     with col_a:
@@ -194,7 +205,7 @@ if uploaded_file is not None:
     with v1:
         st.metric("👥 Jumlah Pasien", len(df_raw))
     with v2:
-        st.metric("📋 Jumlah Kolom", len(df_raw.columns))
+        st.metric("Jumlah Kolom", len(df_raw.columns))
     with v3:
         st.metric("Kolom Tidak Ditemukan", len(missing_cols), delta=None, delta_color="inverse")
     with v4:
@@ -214,12 +225,12 @@ if uploaded_file is not None:
         st.markdown("")
 
         # ─── SECTION 3: JALANKAN PREDIKSI ────────────────────────────────────
-        st_html("<h3 class=\"section-title-custom\">🔮 Bagian 3: Proses Prediksi Massal</h3>")
+        st_html("<h3 class=\"section-title-custom\">Proses Prediksi Massal</h3>")
         
         col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
         with col_btn_c:
             predict_all = st.button(
-                "🔮 Mulai Prediksi Semua Pasien",
+                "Mulai Prediksi Semua Pasien",
                 use_container_width=True,
                 type="primary"
             )
@@ -270,7 +281,7 @@ if uploaded_file is not None:
             st.markdown("---")
 
             # ─── SECTION 4: RINGKASAN HASIL ───────────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">📊 Bagian 4: Ringkasan Hasil Prediksi Populasi</h3>")
+            st_html("<h3 class=\"section-title-custom\">Ringkasan Hasil Prediksi Populasi</h3>")
             
             m1, m2, m3, m4 = st.columns(4)
             m1.metric("Total Pasien", f"{stats['total_patients']}")
@@ -286,7 +297,7 @@ if uploaded_file is not None:
             st.markdown("")
 
             # ─── SECTION 5: VISUALIZATION ────────────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">📈 Bagian 5: Grafik Analitik Populasi</h3>")
+            st_html("<h3 class=\"section-title-custom\">Grafik Analitik Populasi</h3>")
             
             v_col1, v_col2 = st.columns(2)
             with v_col1:
@@ -309,7 +320,7 @@ if uploaded_file is not None:
                 st_html("</div>")
 
             # ─── SECTION 6: RINGKASAN KLINIS POPULASI ────────────────────────
-            st_html("<h3 class=\"section-title-custom\">🩺 Bagian 6: Interpretasi Klinis Populasi</h3>")
+            st_html("<h3 class=\"section-title-custom\">Interpretasi Klinis Populasi</h3>")
             
             st_html(f"""
             <div class="cdss-card" style="border-left: 6px solid #3282B8;">
@@ -321,7 +332,7 @@ if uploaded_file is not None:
             """)
 
             # ─── SECTION 7: TABEL INTERAKTIF & FILTER ────────────────────────
-            st_html("<h3 class=\"section-title-custom\">📋 Bagian 7: Data Pasien & Filter Pencarian</h3>")
+            st_html("<h3 class=\"section-title-custom\">Data Pasien & Filter Pencarian</h3>")
             
             # Filters block
             st_html("<div class=\"cdss-card\" style=\"background-color: #F8FAFC; border-color: #D6E4F0;\"><h5 style=\"margin:0 0 1rem 0; font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;\">KRITERIA FILTER</h5>")
@@ -380,7 +391,7 @@ if uploaded_file is not None:
             st.markdown("")
 
             # ─── SECTION 8: UNDUH LAPORAN ─────────────────────────────────────
-            st_html("<h3 class=\"section-title-custom\">💾 Bagian 8: Unduh Laporan Prediksi</h3>")
+            st_html("<h3 class=\"section-title-custom\">Unduh Laporan Prediksi</h3>")
             
             dl1, dl2, dl3 = st.columns(3)
 
@@ -402,7 +413,7 @@ if uploaded_file is not None:
             with dl1:
                 if excel_ok:
                     st.download_button(
-                        label="📥 Unduh File Excel",
+                        label="⬇️ Unduh File Excel",
                         data=excel_buffer,
                         file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.xlsx",
                         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -414,7 +425,7 @@ if uploaded_file is not None:
             csv_buffer = final_df.to_csv(index=False).encode("utf-8")
             with dl2:
                 st.download_button(
-                    label="📥 Unduh File CSV",
+                    label="⬇️ Unduh File CSV",
                     data=csv_buffer,
                     file_name=f"OxyPredict_Prediksi_Massal_{datetime.date.today()}.csv",
                     mime="text/csv",
@@ -437,7 +448,7 @@ if uploaded_file is not None:
             with dl3:
                 if pdf_report_bytes:
                     st.download_button(
-                        label="📄 Unduh Laporan PDF",
+                        label="⬇️ Unduh Laporan PDF",
                         data=pdf_report_bytes,
                         file_name=f"OxyPredict_Batch_Report_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
                         mime="application/pdf",
@@ -451,19 +462,19 @@ if uploaded_file is not None:
         from utils.config import show_error_card
         show_error_card("Validasi Gagal", f"Dataset tidak lengkap. Ditemukan {len(missing_cols)} kolom yang hilang.")
 
-        with st.expander("🔍 Lihat Kolom yang Hilang", expanded=True):
+        with st.expander("Lihat Kolom yang Hilang", expanded=True):
             for col in sorted(missing_cols):
-                st.markdown(f"- ❌ `{col}`")
+                st.markdown(f"- `{col}`")
 
         if extra_cols:
-            with st.expander("ℹ️ Kolom Tambahan (tidak digunakan model)", expanded=False):
+            with st.expander("Kolom Tambahan (tidak digunakan model)", expanded=False):
                 for col in sorted(extra_cols):
                     st.markdown(f"- `{col}`")
 
 else:
     # No file uploaded yet — show empty state
     st_html(render_empty_state(
-        "📂",
+        "",
         "Belum Ada Berkas yang Diunggah",
         "Unggah berkas CSV atau XLSX berisi data klinis pasien untuk memulai prediksi massal."
     ))

@@ -37,7 +37,7 @@ df_history = get_prediction_history()
 
 # ─── HEADER ──────────────────────────────────────────────────────────────────
 st_html(render_page_header(
-    "📊",
+    "",
     "Monitoring Prediksi",
     "Pemantauan aktivitas klinis CDSS secara real-time, log prediksi, distribusi risiko pasien, dan statistik penggunaan sistem."
 ))
@@ -45,7 +45,7 @@ st_html(render_page_header(
 # ─── EMPTY STATE ─────────────────────────────────────────────────────────────
 if df_history.empty:
     st_html(render_empty_state(
-        "📊",
+        "",
         "Belum Ada Riwayat Prediksi",
         "Lakukan prediksi pasien terlebih dahulu untuk mulai memantau aktivitas sistem."
     ))
@@ -56,7 +56,7 @@ else:
     rata_keyakinan = float(df_history["Confidence"].mean()) if total_prediksi > 0 else 0.0
 
     # ─── RINGKASAN METRIK ─────────────────────────────────────────────────────
-    st_html("""<h3 class="section-title-custom">📈 Ringkasan Aktivitas Klinis</h3>""")
+    st_html("""<h3 class="section-title-custom">Ringkasan Aktivitas Klinis</h3>""")
 
     m1, m2, m3, m4 = st.columns(4)
     m1.metric("Total Prediksi", f"{total_prediksi}")
@@ -67,7 +67,7 @@ else:
     st_html(render_section_divider())
 
     # ─── RINGKASAN KLINIS ─────────────────────────────────────────────────────
-    st_html("""<h3 class="section-title-custom">🩺 Ringkasan Klinis</h3>""")
+    st_html("""<h3 class="section-title-custom">Ringkasan Klinis</h3>""")
 
     risk_counts = df_history["Risk Level"].value_counts()
     risiko_terbanyak = risk_counts.index[0] if not risk_counts.empty else "Risiko Rendah"
@@ -87,7 +87,7 @@ else:
     st_html(render_section_divider())
 
     # ─── GRAFIK ANALITIK ─────────────────────────────────────────────────────
-    st_html("""<h3 class="section-title-custom">📊 Analitik Prediksi</h3>""")
+    st_html("""<h3 class="section-title-custom">Analitik Prediksi</h3>""")
 
     col_chart1, col_chart2 = st.columns(2)
 
@@ -145,7 +145,7 @@ else:
     st_html(render_section_divider())
 
     # ─── TREN PENGGUNAAN ─────────────────────────────────────────────────────
-    st_html("""<h3 class="section-title-custom">📈 Tren Penggunaan</h3>""")
+    st_html("""<h3 class="section-title-custom">Tren Penggunaan</h3>""")
 
     try:
         df_history["Tanggal"] = pd.to_datetime(df_history["Timestamp"]).dt.date
@@ -161,9 +161,9 @@ else:
                                     xaxis_title="Tanggal", yaxis_title="Total Prediksi")
             st.plotly_chart(fig_trend, use_container_width=True, config={'displayModeBar': False})
         else:
-            st.info("ℹ️ Data historis belum cukup untuk menampilkan tren penggunaan.")
+            st.info("Data historis belum cukup untuk menampilkan tren penggunaan.")
     except Exception:
-        st.info("ℹ️ Data historis belum cukup untuk menampilkan tren penggunaan.")
+        st.info("Data historis belum cukup untuk menampilkan tren penggunaan.")
 
     st_html(render_section_divider())
 
@@ -173,7 +173,7 @@ else:
     with col_table:
         st_html("""
         <div class="cdss-card" style="height: 100%;">
-            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">📋 Log Prediksi Terbaru (10 Terakhir)</h4>
+            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">Log Prediksi Terbaru (10 Terakhir)</h4>
         """)
         recent_df = df_history.tail(10).iloc[::-1].copy()
         recent_table_df = pd.DataFrame({
@@ -193,7 +193,7 @@ else:
 
         st_html(f"""
         <div class="cdss-card" style="height: 100%;">
-            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">⚙️ Statistik Penggunaan</h4>
+            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">Statistik Penggunaan</h4>
             <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
                 <tr style="border-bottom: 1px solid #f1f5f9;">
                     <td style="padding: 0.6rem 0; color: #64748b; font-weight: 500;">Prediksi Pasien Tunggal</td>

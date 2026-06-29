@@ -21,7 +21,7 @@ def st_html(html_str):
 
 # ─── SECTION 1: HEADER ───────────────────────────────────────────────────────
 st_html(render_page_header(
-    "📘",
+    "",
     "Panduan Keputusan Klinis",
     "Panduan lengkap untuk implementasi klinis, interpretasi hasil, dan penggunaan OxyPredict."
 ))
@@ -29,9 +29,8 @@ st_html(render_page_header(
 # ─── SECTION 1: Ikhtisar Dukungan Keputusan Klinis ──────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 0.8rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">local_hospital</span>
-        1. Ikhtisar Dukungan Keputusan Klinis
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 0.8rem 0; font-weight: 700;">
+        Ikhtisar Dukungan Keputusan Klinis
     </h3>
     <p style="font-size: 16px; color: #1E293B; line-height: 1.7; margin-bottom: 1rem;">
         <strong>OxyPredict</strong> adalah Sistem Pendukung Keputusan Klinis (CDSS) yang dirancang untuk membantu tenaga kesehatan menilai apakah pasien pediatrik dengan Infeksi Saluran Pernapasan Akut (ISPA) dan Pneumonia memerlukan terapi oksigen tambahan.
@@ -39,7 +38,6 @@ st_html("""
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.2rem;">
         <div style="background: #F8FAFC; padding: 1rem; border-radius: 10px; border-left: 3px solid #3282B8;">
             <strong style="font-size: 15px; color: #1E293B; display: block; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; color: #2563EB;">target</span>
                 Tujuan Sistem
             </strong>
             <span style="font-size: 14px; color: #64748B; line-height: 1.5; display: block;">
@@ -48,7 +46,6 @@ st_html("""
         </div>
         <div style="background: #F8FAFC; padding: 1rem; border-radius: 10px; border-left: 3px solid #3282B8;">
             <strong style="font-size: 15px; color: #1E293B; display: block; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; color: #2563EB;">group</span>
                 Pengguna yang Ditujukan
             </strong>
             <span style="font-size: 14px; color: #64748B; line-height: 1.5; display: block;">
@@ -57,7 +54,6 @@ st_html("""
         </div>
         <div style="background: #F8FAFC; padding: 1rem; border-radius: 10px; border-left: 3px solid #3282B8;">
             <strong style="font-size: 15px; color: #1E293B; display: block; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; color: #2563EB;">schedule</span>
                 Kapan Digunakan
             </strong>
             <span style="font-size: 14px; color: #64748B; line-height: 1.5; display: block;">
@@ -87,9 +83,8 @@ st_html(render_section_divider())
 # ─── SECTION 2: How to Use OxyPredict ───────────────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">settings</span>
-        2. Cara Menggunakan OxyPredict
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Cara Menggunakan OxyPredict
     </h3>
     <div style="position: relative; padding-left: 1.5rem; border-left: 2px solid #D8E2EC;">
         <div style="margin-bottom: 1.2rem; position: relative;">
@@ -131,9 +126,8 @@ st_html(render_section_divider())
 # ─── SECTION 3: Memahami Hasil Prediksi ─────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">analytics</span>
-        3. Memahami Hasil Prediksi
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Memahami Hasil Prediksi
     </h3>
     <p style="font-size: 14px; color: #64748B; margin-bottom: 1rem;">
         Setiap prediksi yang dihasilkan OxyPredict mencakup empat variabel klinis utama:
@@ -177,9 +171,8 @@ st_html(render_section_divider())
 # ─── SECTION 4: Interpretasi Level Risiko ───────────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #EF4444;">warning</span>
-        4. Interpretasi Level Risiko
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Interpretasi Level Risiko
     </h3>
     <p style="font-size: 14px; color: #64748B; margin-bottom: 1rem;">
         Level risiko memprioritaskan pemantauan pasien dan menentukan jalur tindakan:
@@ -222,9 +215,8 @@ st_html(render_section_divider())
 # ─── SECTION 5: Confidence Level Interpretation ─────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">speed</span>
-        5. Level Keyakinan Model
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Level Keyakinan Model
     </h3>
     <p style="font-size: 16px; color: #1E293B; line-height: 1.7; margin-bottom: 1.2rem;">
         Level keyakinan menunjukkan seberapa kuat fitur cocok dengan pola dari kasus pasien sebelumnya.
@@ -264,9 +256,8 @@ st_html(render_section_divider())
 # ─── SECTION 6: Memahami Penjelasan SHAP ──────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">biotech</span>
-        6. Memahami Penjelasan SHAP
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Memahami Penjelasan SHAP
     </h3>
     <p style="font-size: 16px; color: #1E293B; line-height: 1.7; margin-bottom: 1rem;">
         <strong>SHAP (SHapley Additive exPlanations)</strong> adalah kerangka kerja AI yang dapat dijelaskan, yang memecah prediksi dengan menunjukkan kontribusi setiap parameter pasien:
@@ -274,7 +265,6 @@ st_html("""
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem;">
         <div style="background: #FEF2F2; padding: 1rem; border-radius: 10px; border-left: 3px solid #EF4444;">
             <strong style="color: #EF4444; font-size: 15px; display: block; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">trending_up</span>
                 Positive Contributions (Increases Risk)
             </strong>
             <span style="font-size: 14px; color: #64748B; line-height: 1.5; display: block;">
@@ -283,7 +273,6 @@ st_html("""
         </div>
         <div style="background: #ECFDF5; padding: 1rem; border-radius: 10px; border-left: 3px solid #22C55E;">
             <strong style="color: #15803D; font-size: 15px; display: block; margin-bottom: 0.4rem;">
-                <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle;">trending_down</span>
                 Negative Contributions (Decreases Risk)
             </strong>
             <span style="font-size: 14px; color: #64748B; line-height: 1.5; display: block;">
@@ -293,7 +282,6 @@ st_html("""
     </div>
     <div style="background: #F8FAFC; padding: 1rem; border-radius: 10px;">
         <strong style="font-size: 15px; color: #1E293B; display: block; margin-bottom: 0.4rem;">
-            <span class="material-symbols-outlined" style="font-size: 18px; vertical-align: middle; color: #3282B8;">description</span>
             Narasi Ringkasan Klinis AI
         </strong>
         <span style="font-size: 14px; color: #64748B; line-height: 1.6; display: block;">
@@ -308,9 +296,8 @@ st_html(render_section_divider())
 # ─── SECTION 7: Panduan Prediksi Batch ───────────────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">folder_open</span>
-        7. Panduan Prediksi Batch
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Panduan Prediksi Batch
     </h3>
     <p style="font-size: 16px; color: #1E293B; line-height: 1.7; margin-bottom: 1rem;">
         Halaman Prediksi Batch memungkinkan pemrosesan dataset multi-pasien secara bersamaan:
@@ -330,9 +317,8 @@ st_html(render_section_divider())
 # ─── SECTION 8: Rekomendasi Klinis ─────────────────────────────────────
 st_html("""
 <div class="cdss-card">
-    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #15803D;">lightbulb</span>
-        8. Rekomendasi Klinis
+    <h3 style="font-size: 22px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;">
+        Rekomendasi Klinis
     </h3>
     <div style="background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 12px; padding: 1.2rem;">
         <ul style="list-style-type: none; padding: 0; margin: 0; font-size: 15px; color: #15803D; line-height: 1.7;">
@@ -350,9 +336,8 @@ st_html(render_section_divider())
 # ─── SECTION 9: Batasan Sistem ──────────────────────────────────────────
 st_html("""
 <div class="cdss-card" style="border-left: 5px solid #F59E0B;">
-    <h3 style="font-size: 22px; color: #F59E0B; margin: 0 0 0.8rem 0; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
-        <span class="material-symbols-outlined" style="font-size: 24px; color: #F59E0B;">gpp_maybe</span>
-        9. Batasan Sistem & Penafian
+    <h3 style="font-size: 22px; color: #F59E0B; margin: 0 0 0.8rem 0; font-weight: 700;">
+        Batasan Sistem & Penafian
     </h3>
     <ul style="font-size: 15px; color: #B45309; line-height: 1.7; margin: 0 0 0 1.2rem; padding: 0;">
         <li style="margin-bottom: 0.5rem;"><strong>Ruang Lingkup Pengembangan Model:</strong> Mesin prediktif dikembangkan dan divalidasi menggunakan data 801 kasus pernapasan akut pediatrik.</li>
@@ -367,9 +352,8 @@ st_html(render_section_divider())
 
 # ─── SECTION 10: Pertanyaan yang Sering Diajukan ──────────────────────────────────
 st_html("""
-<h3 class="section-title-custom" style="display: flex; align-items: center; gap: 0.5rem;">
-    <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8;">help</span>
-    10. Pertanyaan yang Sering Diajukan
+<h3 class="section-title-custom">
+    Pertanyaan yang Sering Diajukan
 </h3>
 """)
 

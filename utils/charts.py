@@ -39,10 +39,13 @@ def create_risk_distribution_chart(df: pd.DataFrame):
     Create a Bar Chart showing the distribution of patients across Low, Medium, and High risk levels.
     """
     def map_risk(risk):
-        if risk in ["Low Risk", "Low-Moderate Risk"]:
+        risk_text = str(risk).lower()
+        if "rendah" in risk_text:
             return "Rendah"
-        if risk in ["Moderate Risk", "Medium Risk"]:
+        if "sedang" in risk_text:
             return "Sedang"
+        if "tinggi" in risk_text:
+            return "Tinggi"
         return "Tinggi"
 
     mapped_risks = df["Risk Level"].apply(map_risk)
@@ -102,10 +105,13 @@ def create_avg_prob_per_risk_chart(df: pd.DataFrame):
     Create a Bar Chart showing the average predicted probability per Risk Level.
     """
     def map_risk(risk):
-        if risk in ["Low Risk", "Low-Moderate Risk"]:
+        risk_text = str(risk).lower()
+        if "rendah" in risk_text:
             return "Rendah"
-        if risk in ["Moderate Risk", "Medium Risk"]:
+        if "sedang" in risk_text:
             return "Sedang"
+        if "tinggi" in risk_text:
+            return "Tinggi"
         return "Tinggi"
 
     temp_df = df.copy()
@@ -230,7 +236,7 @@ def create_prediction_ratio_donut(df: pd.DataFrame):
         names="Status",
         values="Count",
         color="Status",
-        color_discrete_map={"Need Oxygen": "#EF4444", "No Oxygen": "#22C55E"},
+        color_discrete_map={"Butuh Oksigen": "#EF4444", "Tidak Butuh Oksigen": "#22C55E"},
         hole=0.6,
     )
     fig.update_layout(

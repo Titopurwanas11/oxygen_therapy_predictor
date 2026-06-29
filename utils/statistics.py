@@ -23,10 +23,10 @@ def calculate_population_stats(df: pd.DataFrame) -> dict:
     no_oxy = int((df["Prediction"] == "No").sum())
     avg_prob = float(df["Probability"].mean())
 
-    # Map risk levels to Low, Medium, High counts
-    low_risk = int(df["Risk Level"].isin(["Low Risk", "Low-Moderate Risk"]).sum())
-    med_risk = int(df["Risk Level"].isin(["Moderate Risk", "Medium Risk"]).sum())
-    high_risk = int(df["Risk Level"].isin(["High Risk", "Very High Risk"]).sum())
+    # Map risk levels to Low, Medium, High counts using Indonesian labels
+    low_risk = int(df["Risk Level"].isin(["Risiko Rendah", "Risiko Rendah-Sedang"]).sum())
+    med_risk = int(df["Risk Level"].isin(["Risiko Sedang"]).sum())
+    high_risk = int(df["Risk Level"].isin(["Risiko Tinggi", "Risiko Sangat Tinggi"]).sum())
 
     need_oxy_pct = (need_oxy / total) * 100.0 if total > 0 else 0.0
 

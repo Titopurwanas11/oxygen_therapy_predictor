@@ -336,65 +336,65 @@ def generate_shap_clinical_interpretation(shap_result: dict, label: str) -> str:
         """Convert feature name to a more readable clinical term."""
         name = feat_name.lower()
         if "oxygen saturation" in name or "sao2" in name:
-            return "oxygen saturation level"
+            return "tingkat saturasi oksigen"
         if "temperature" in name:
-            return "body temperature"
+            return "suhu tubuh"
         if "respiratory rate" in name:
-            return "respiratory rate"
+            return "laju pernapasan"
         if "heart rate" in name:
-            return "heart rate"
+            return "denyut jantung"
         if "wheezing" in name:
-            return "wheezing"
+            return "mengi"
         if "nasal flaring" in name:
-            return "nasal flaring"
+            return "pengembangan hidung"
         if "cyanosis" in name:
-            return "cyanosis"
+            return "sianosis"
         if "crackles" in name:
-            return "crackles"
+            return "ronki"
         if "rhonchi" in name:
-            return "rhonchi"
+            return "ronki"
         if "stridor" in name:
-            return "laryngeal stridor"
+            return "stridor laring"
         if "sleepiness" in name:
-            return "unusual sleepiness"
+            return "kantuk tidak biasa"
         if "consciousness" in name:
-            return "disorders of consciousness"
+            return "gangguan kesadaran"
         if "c-reactive" in name or "protein" in name:
-            return "C-reactive protein"
+            return "protein C-reaktif"
         if "procalcitonin" in name:
-            return "procalcitonin"
+            return "prokalsitonin"
         if "hypoventilation" in name:
-            return "hypoventilation"
+            return "hipoventilasi"
         if "dehydration" in name:
-            return "dehydration signs"
+            return "tanda dehidrasi"
         if "restlessness" in name:
-            return "restlessness"
+            return "gelisah"
         if "paleness" in name:
-            return "paleness"
+            return "pucat"
         if "weight" in name:
-            return "body weight"
+            return "berat badan"
         if "height" in name:
-            return "body height"
+            return "tinggi badan"
         if "age" in name:
-            return "patient age"
+            return "usia pasien"
         if "fever" in name and "days" in name:
-            return "duration of fever"
+            return "durasi demam"
         if "fever" in name:
-            return "history of fever"
+            return "riwayat demam"
         if "vomiting" in name and "days" in name:
-            return "duration of vomiting"
+            return "durasi muntah"
         if "vomiting" in name:
-            return "history of vomiting"
+            return "riwayat muntah"
         if "cough" in name:
-            return "history of cough"
+            return "riwayat batuk"
         if "diarrhea" in name:
-            return "history of diarrhea"
+            return "riwayat diare"
         if "rhinorrhea" in name:
-            return "rhinorrhea"
+            return "rhinorea"
         if "breastfeeding" in name:
-            return "breastfeeding status"
+            return "status menyusui"
         if "nasopharyngeal" in name:
-            return "nasopharyngeal aspiration"
+            return "aspirasi nasofaring"
         # Generic fallback
         clean = feat_name.replace("Health history : ", "").replace("history of ", "")
         return clean.strip().lower()
@@ -414,32 +414,31 @@ def generate_shap_clinical_interpretation(shap_result: dict, label: str) -> str:
     if label == "Yes":
         if pos_terms:
             parts.append(
-                f"The prediction is mainly influenced by the presence of {_list_str(pos_terms)}. "
-                f"These findings indicate clinical factors that strongly contribute to the prediction "
-                f"that oxygen therapy is required."
+                f"Prediksi ini terutama dipengaruhi oleh adanya {_list_str(pos_terms)}. "
+                f"Temuan tersebut menunjukkan faktor klinis yang sangat berkontribusi pada rekomendasi "
+                f"bahwa terapi oksigen diperlukan."
             )
         if neg_terms:
             parts.append(
-                f"Conversely, {_list_str(neg_terms)} partially reduced the prediction score, "
-                f"but the overall evidence still supports the need for oxygen therapy."
+                f"Sebaliknya, {_list_str(neg_terms)} sedikit menurunkan skor prediksi, "
+                f"tetapi bukti keseluruhan tetap mendukung kebutuhan terapi oksigen."
             )
     else:
         if neg_terms:
             parts.append(
-                f"The prediction is mainly supported by stable clinical indicators including "
-                f"{_list_str(neg_terms)}. "
-                f"These factors contribute to the prediction that oxygen therapy is not required."
+                f"Prediksi ini didukung oleh indikator klinis yang stabil seperti {_list_str(neg_terms)}. "
+                f"Faktor-faktor ini mendukung penilaian bahwa terapi oksigen tidak diperlukan."
             )
         if pos_terms:
             parts.append(
-                f"However, {_list_str(pos_terms)} slightly increased the risk score, "
-                f"suggesting continued monitoring may be warranted."
+                f"Namun, {_list_str(pos_terms)} sedikit meningkatkan skor risiko, "
+                f"menyarankan pemantauan lanjutan mungkin diperlukan."
             )
 
     if not parts:
         parts.append(
-            "The prediction is based on a balanced combination of clinical features "
-            "without a single dominant factor."
+            "Prediksi ini berdasarkan kombinasi fitur klinis yang seimbang "
+            "tanpa faktor dominan tunggal."
         )
 
     return " ".join(parts)
