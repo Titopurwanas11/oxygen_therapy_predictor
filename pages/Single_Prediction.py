@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import datetime
 import io
+import base64
 from utils.config import (
     FEATURE_GROUPS,
     NUMERICAL_FEATURES,
@@ -52,6 +53,16 @@ def st_html(html_str):
     cleaned_lines = [line.lstrip() for line in html_str.splitlines()]
     cleaned_html = "\n".join(cleaned_lines)
     st.markdown(cleaned_html, unsafe_allow_html=True)
+
+
+def get_pdf_download_link(pdf_bytes: bytes, filename: str) -> str:
+    encoded = base64.b64encode(pdf_bytes).decode()
+    return (
+        f'<a href="data:application/pdf;base64,{encoded}" download="{filename}" '
+        f'style="display:inline-block;padding:0.8rem 1rem;border-radius:0.75rem;'
+        f'background-color:#2563EB;color:#ffffff;font-weight:700;text-decoration:none;'
+        f'box-shadow:0 10px 20px rgba(37,99,235,0.12);">📄 Unduh Laporan Klinis (PDF)</a>'
+    )
 
 # ─── Custom Layout Styling ───────────────────────────────────────────────────
 st_html("""
@@ -625,17 +636,11 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 </div>
                 """)
 
-                # Download Button for PDF Report
+                # Download Link for PDF Report (uses HTML link to avoid page rerun refresh)
                 if pdf_report_bytes:
                     report_filename = f"OxyPredict_Laporan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                    st.download_button(
-                        label="📄 Unduh Laporan Klinis (PDF)",
-                        data=pdf_report_bytes,
-                        file_name=report_filename,
-                        mime="application/pdf",
-                        use_container_width=True,
-                        on_click=track_pdf_report_generated
-                    )
+                    pdf_link = get_pdf_download_link(pdf_report_bytes, report_filename)
+                    st.markdown(pdf_link, unsafe_allow_html=True)
                 else:
                     st.warning("Laporan PDF tidak dapat dibuat saat ini.")
                     
