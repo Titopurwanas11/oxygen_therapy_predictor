@@ -67,13 +67,13 @@ with col_upload_left:
 
 with col_upload_right:
     st_html("""
-    <div class="cdss-card" style="background-color: #f8fafc; border-color: #e2e8f0; height: 100%; min-height: 140px; padding: 1.1rem 1.4rem;">
-        <h5 style="margin: 0 0 0.5rem 0; color: #0f172a; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Supported Format</h5>
+    <div class="cdss-card" style="background-color: #F8FAFC; border-color: #D6E4F0; border-color: #D6E4F0; height: 100%; min-height: 140px; padding: 1.1rem 1.4rem;">
+        <h5 style="margin: 0 0 0.5rem 0; color: #1E293B; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Supported Format</h5>
         <div style="display: flex; gap: 0.5rem; margin-bottom: 0.6rem;">
-            <span style="background-color: #3b82f6; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">CSV</span>
-            <span style="background-color: #10b981; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">Excel (.xlsx)</span>
+            <span style="background-color: #3282B8; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">CSV</span>
+            <span style="background-color: #14B8A6; color: white; font-size: 0.72rem; font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 5px;">Excel (.xlsx)</span>
         </div>
-        <div style="font-size: 0.8rem; color: #475569; line-height: 1.4;">
+        <div style="font-size: 0.8rem; color: #64748B; line-height: 1.4;">
             <strong>Required Fitur:</strong> 44 Fitur Klinis Pasien<br>
             <strong>Dataset Validasi:</strong> Otomatis oleh Sistem
         </div>
@@ -92,20 +92,102 @@ with st.expander("📋 Lihat Daftar Kolom yang Diperlukan (44 fitur)", expanded=
             st.markdown(f"`{i}.` {feat}")
 
 # Process file if uploaded
+# Process file if uploaded
 if uploaded_file is not None:
+    # 1. File size check (limit 50MB)
+    max_size = 50 * 1024 * 1024
+    if uploaded_file.size > max_size:
+        from utils.config import show_error_card
+        show_error_card(
+            "Uploaded file exceeds maximum allowed size.",
+            "Ukuran file maksimal yang diperbolehkan adalah 50 MB. Silakan kompresi file Anda atau bagi menjadi beberapa bagian."
+        )
+        st.stop()
+
     try:
         if uploaded_file.name.endswith(".csv"):
             df_raw = pd.read_csv(uploaded_file)
         else:
             df_raw = pd.read_excel(uploaded_file)
     except Exception as e:
-        st.error(f"❌ Gagal membaca file: {str(e)}")
+        from utils.config import logger, show_error_card
+        logger.error("Failed to read batch file: %s", str(e), exc_info=True)
+        show_error_card(
+            "Gagal Membaca File",
+            "Pastikan file yang diunggah tidak rusak, tidak terkunci oleh aplikasi lain, dan memiliki format .csv atau .xlsx yang valid."
+        )
         st.stop()
 
-    # ─── SECTION 2: DATA VALIDATION ──────────────────────────────────────────
-    st_html("<h3 class=\"section-title-custom\">✅ Section 2: Dataset Verification</h3>")
+    # 2. Empty dataset check
+    if len(df_raw) == 0:
+        from utils.config import show_warning_card
+        show_warning_card(
+            "No patient records were found.",
+            "Dataset yang diunggah kosong. Pastikan file Anda berisi baris data pasien."
+        )
+        st.stop()
 
+    # 3. Duplicate column validation
+    has_duplicates = len(df_raw.columns) != len(set(df_raw.columns))
+    if has_duplicates:
+        duplicate_cols = list(set([col for col in df_raw.columns if list(df_raw.columns).count(col) > 1]))
+        from utils.config import show_warning_card
+        show_warning_card(
+            "Duplicate Columns Found",
+            "Dataset Anda mengandung kolom duplikat berikut:<br>• " + "<br>• ".join(duplicate_cols) + "<br><br>Perbaiki file Anda dan coba lagi."
+        )
+        st.stop()
+
+    # 4. Column validation (Missing / Extra columns)
     is_valid, missing_cols, extra_cols = validate_uploaded_file(df_raw)
+    if not is_valid:
+        from utils.config import show_warning_card
+        show_warning_card(
+            "Kolom berikut belum tersedia:",
+            "• " + "<br>• ".join(missing_cols) + "<br><br>Silakan gunakan template resmi OxyPredict."
+        )
+        st.stop()
+
+    # 5. Missing values and Categorical options validation
+    null_cols = []
+    invalid_cat_cols = {}
+    from utils.config import NUMERICAL_RANGES, CATEGORICAL_OPTIONS
+    for col in df_raw.columns:
+        # Check null/missing values
+        null_cnt = df_raw[col].isna().sum()
+        if null_cnt > 0:
+            null_cols.append(f"{col} ({null_cnt} data kosong)")
+            
+        # Check categorical values validity
+        if col in CATEGORICAL_OPTIONS:
+            allowed_opts = set(CATEGORICAL_OPTIONS[col])
+            unique_vals = set(df_raw[col].dropna().unique())
+            # Convert values to string for safe checks
+            allowed_opts_str = {str(o) for o in allowed_opts}
+            unique_vals_str = {str(v) for v in unique_vals}
+            invalid_vals = unique_vals_str - allowed_opts_str
+            if invalid_vals:
+                invalid_cat_cols[col] = list(invalid_vals)
+                
+    if null_cols:
+        from utils.config import show_warning_card
+        show_warning_card(
+            "Missing Values Detected",
+            "Dataset mengandung data kosong pada kolom berikut:<br>• " + "<br>• ".join(null_cols) + "<br><br>Lengkapi nilai kosong sebelum memproses prediksi."
+        )
+        st.stop()
+        
+    if invalid_cat_cols:
+        invalid_desc = []
+        for col, vals in invalid_cat_cols.items():
+            allowed = ", ".join([str(o) for o in CATEGORICAL_OPTIONS[col]])
+            invalid_desc.append(f"Kolom '{col}': Nilai {vals} tidak valid (Pilihan: {allowed})")
+        from utils.config import show_warning_card
+        show_warning_card(
+            "Invalid Categorical Values",
+            "• " + "<br>• ".join(invalid_desc) + "<br><br>Sesuaikan nilai kategori dengan ketentuan."
+        )
+        st.stop()
 
     v1, v2, v3, v4, v5 = st.columns(5)
     
@@ -123,19 +205,8 @@ if uploaded_file is not None:
     st.markdown("")
 
     if is_valid:
-        st_html("""
-        <div style="
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
-            border-left: 5px solid #16a34a;
-            border-radius: 10px;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1rem;
-        ">
-            <span style="font-size: 0.9rem; font-weight: 700; color: #14532d;">✔ Validasi Sukses:</span>
-            <span style="font-size: 0.85rem; color: #166534;">Semua 44 kolom klinis ditemukan. Dataset siap dianalisis.</span>
-        </div>
-        """)
+        from utils.config import show_success_card
+        show_success_card("Validasi Sukses", "Semua 44 kolom klinis ditemukan. Dataset siap dianalisis.")
 
         with st.expander("👀 Preview Data (5 baris pertama)", expanded=False):
             st.dataframe(df_raw.head(), use_container_width=True)
@@ -158,6 +229,7 @@ if uploaded_file is not None:
             if predict_all or "batch_results" not in st.session_state:
                 with st.spinner("Running Random Forest Model..."):
                     try:
+                        from utils.prediction import ModelLoadError
                         result_df = run_batch_prediction(df_raw)
                         track_batch_prediction()
                         try:
@@ -168,8 +240,26 @@ if uploaded_file is not None:
                         # Save in session state
                         st.session_state.batch_results = result_df
                         st.session_state.batch_predicted = True
+                        
+                        from utils.config import show_success_card
+                        show_success_card(
+                            "Batch Prediction Completed Successfully",
+                            f"Berhasil memproses analisis klasifikasi medis untuk {len(result_df)} pasien."
+                        )
+                    except ModelLoadError:
+                        from utils.config import show_error_card
+                        show_error_card(
+                            "❌ Model Machine Learning tidak dapat dimuat",
+                            "Possible causes:<br>• File model tidak ditemukan.<br>• Model rusak.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+                        )
+                        st.stop()
                     except Exception as pred_err:
-                        st.error(f"❌ Terjadi kesalahan saat memproses prediksi: {pred_err}")
+                        from utils.config import logger, show_error_card
+                        logger.error("Batch prediction failed: %s", str(pred_err), exc_info=True)
+                        show_error_card(
+                            "Prediction Failed",
+                            "Sistem tidak dapat melakukan prediksi karena terjadi gangguan internal. Hubungi tim IT atau administrator sistem."
+                        )
                         st.stop()
 
             # Retrieve results
@@ -200,21 +290,21 @@ if uploaded_file is not None:
             
             v_col1, v_col2 = st.columns(2)
             with v_col1:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Oxygen Therapy Need Ratio</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Oxygen Therapy Need Ratio</h4>")
                 st.plotly_chart(create_pie_chart(result_df), use_container_width=True)
                 st_html("</div>")
             with v_col2:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Risk Level Distribution</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Risk Level Distribution</h4>")
                 st.plotly_chart(create_risk_distribution_chart(result_df), use_container_width=True)
                 st_html("</div>")
 
             v_col3, v_col4 = st.columns(2)
             with v_col3:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Prediction Probability Distribution Histogram</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Prediction Probability Distribution Histogram</h4>")
                 st.plotly_chart(create_probability_histogram(result_df), use_container_width=True)
                 st_html("</div>")
             with v_col4:
-                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Average Probability per Risk Level</h4>")
+                st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #1E293B; margin: 0 0 1rem 0; font-weight: 700;\">Average Probability per Risk Level</h4>")
                 st.plotly_chart(create_avg_prob_per_risk_chart(result_df), use_container_width=True)
                 st_html("</div>")
 
@@ -222,17 +312,9 @@ if uploaded_file is not None:
             st_html("<h3 class=\"section-title-custom\">🩺 Section 6: Population Clinical Interpretation</h3>")
             
             st_html(f"""
-            <div style="
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-left: 6px solid #2563eb;
-                border-radius: 14px;
-                padding: 1.5rem;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.02);
-                margin-bottom: 1.5rem;
-            ">
-                <h4 style="margin: 0 0 0.8rem 0; color: #0a2e52; font-weight: 700; font-size: 0.95rem;">CDSS Population Narrative Summary</h4>
-                <p style="margin: 0; color: #334155; font-size: 0.88rem; line-height: 1.7; text-align: justify;">
+            <div class="cdss-card" style="border-left: 6px solid #3282B8;">
+                <h4 style="margin: 0 0 0.8rem 0; color: #0F4C75; font-weight: 700; font-size: 18px;">CDSS Population Narrative Summary</h4>
+                <p style="margin: 0; color: #1E293B; font-size: 16px; line-height: 1.7; text-align: justify;">
                     {narrative}
                 </p>
             </div>
@@ -242,7 +324,7 @@ if uploaded_file is not None:
             st_html("<h3 class=\"section-title-custom\">📋 Section 7: Enriched Patient Dataset & Query Filters</h3>")
             
             # Filters block
-            st_html("<div class=\"cdss-card\" style=\"background-color: #f8fafc;\"><h5 style=\"margin:0 0 1rem 0; font-size:0.85rem; font-weight:700; color:#475569;\">🔍 FILTER CRITERIA</h5>")
+            st_html("<div class=\"cdss-card\" style=\"background-color: #F8FAFC; border-color: #D6E4F0;\"><h5 style=\"margin:0 0 1rem 0; font-size: 13px; font-weight: 600; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;\">FILTER CRITERIA</h5>")
             f1, f2, f3, f4 = st.columns(4)
             with f1:
                 filter_pred = st.selectbox("Prediction", ["All", "Yes", "No"])
@@ -281,9 +363,9 @@ if uploaded_file is not None:
             def highlight_row(row):
                 pred = row["Prediction"]
                 if pred == "Yes":
-                    return ["background-color: #fee2e2; color: #991b1b;"] * len(row)
+                    return ["background-color: #FEF2F2; color: #EF4444;"] * len(row)
                 elif pred == "No":
-                    return ["background-color: #dcfce7; color: #14532d;"] * len(row)
+                    return ["background-color: #ECFDF5; color: #22C55E;"] * len(row)
                 return [""] * len(row)
 
             # Style display df
@@ -303,18 +385,30 @@ if uploaded_file is not None:
             dl1, dl2, dl3 = st.columns(3)
 
             # Excel download with enriched columns
-            excel_buffer = io.BytesIO()
-            final_df.to_excel(excel_buffer, index=False, engine="openpyxl")
-            excel_buffer.seek(0)
-            with dl1:
-                st.download_button(
-                    label="📥 Download Excel Clinical Data",
-                    data=excel_buffer,
-                    file_name=f"OxyPredict_Batch_Export_{datetime.date.today()}.xlsx",
-                    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                    use_container_width=True,
-                    on_click=track_excel_download,
+            excel_ok = False
+            try:
+                excel_buffer = io.BytesIO()
+                final_df.to_excel(excel_buffer, index=False, engine="openpyxl")
+                excel_buffer.seek(0)
+                excel_ok = True
+            except Exception as excel_err:
+                from utils.config import logger, show_warning_card
+                logger.error("Excel batch export failed: %s", str(excel_err), exc_info=True)
+                show_warning_card(
+                    "Unable to Export Results",
+                    "Gagal mengekspor data ke Excel. Pastikan file tidak sedang dibuka oleh aplikasi lain atau terkunci."
                 )
+
+            with dl1:
+                if excel_ok:
+                    st.download_button(
+                        label="📥 Download Excel Clinical Data",
+                        data=excel_buffer,
+                        file_name=f"OxyPredict_Batch_Export_{datetime.date.today()}.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True,
+                        on_click=track_excel_download,
+                    )
 
             # CSV download with enriched columns
             csv_buffer = final_df.to_csv(index=False).encode("utf-8")
@@ -329,11 +423,16 @@ if uploaded_file is not None:
                 )
 
             # PDF Batch Report download
+            pdf_report_bytes = None
             try:
                 pdf_report_bytes = generate_batch_pdf_report(result_df, stats, narrative)
             except Exception as pdf_err:
-                st.error(f"❌ Gagal membuat PDF Report: {pdf_err}")
-                pdf_report_bytes = None
+                from utils.config import logger, show_error_card
+                logger.error("Batch PDF generation failed: %s", str(pdf_err), exc_info=True)
+                show_error_card(
+                    "Failed to Generate Report",
+                    "Gagal membuat PDF Report. Silakan coba kembali beberapa saat lagi."
+                )
 
             with dl3:
                 if pdf_report_bytes:
@@ -345,24 +444,12 @@ if uploaded_file is not None:
                         use_container_width=True,
                         on_click=track_pdf_report_generated,
                     )
-                else:
-                    st.info("ℹ️ Run PDF compiler to debug report generation.")
+
 
     else:
         # Columns verification failed
-        st_html(f"""
-        <div style="
-            background: #fdf2f2;
-            border: 1px solid #fecaca;
-            border-left: 5px solid #dc2626;
-            border-radius: 10px;
-            padding: 0.8rem 1.2rem;
-            margin-bottom: 1rem;
-        ">
-            <span style="font-size: 0.9rem; font-weight: 700; color: #7f1d1d;">❌ Validasi Gagal:</span>
-            <span style="font-size: 0.85rem; color: #991b1b;">Dataset tidak lengkap. Ditemukan {len(missing_cols)} kolom yang hilang.</span>
-        </div>
-        """)
+        from utils.config import show_error_card
+        show_error_card("Validasi Gagal", f"Dataset tidak lengkap. Ditemukan {len(missing_cols)} kolom yang hilang.")
 
         with st.expander("🔍 Lihat Kolom yang Hilang", expanded=True):
             for col in sorted(missing_cols):

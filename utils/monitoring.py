@@ -8,35 +8,47 @@ import numpy as np
 import pandas as pd
 import streamlit as st
 
+from utils.config import ALL_FEATURES
+
 HISTORY_FILE = os.path.join(os.path.dirname(__file__), "prediction_history.csv")
 
-def record_prediction(age: float, prediction: str, confidence: float, risk_level: str, type: str = "Single"):
+def record_prediction(patient_data: dict, prediction: str, confidence: float, risk_level: str, type: str = "Single"):
     """
-    Record a single prediction result to prediction_history.csv.
+    Record a single prediction result with all 44 input features to prediction_history.csv.
     """
     timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    new_data = pd.DataFrame([{
+    row_dict = {
         "Timestamp": timestamp,
-        "Age": float(age),
         "Prediction": str(prediction),
         "Confidence": float(confidence),
         "Risk Level": str(risk_level),
         "Type": str(type)
-    }])
+    }
+    
+    # Extract age explicitly as "Age" for backward compatibility and quick statistics
+    row_dict["Age"] = float(patient_data.get("Age (months)", 0))
+    
+    # Store all 44 features
+    for feat in ALL_FEATURES:
+        row_dict[feat] = patient_data.get(feat, np.nan)
+        
+    new_data = pd.DataFrame([row_dict])
     
     if os.path.exists(HISTORY_FILE):
         try:
             df = pd.read_csv(HISTORY_FILE)
             df = pd.concat([df, new_data], ignore_index=True)
             df.to_csv(HISTORY_FILE, index=False)
-        except Exception:
+        except Exception as e:
+            from utils.config import logger
+            logger.error("Failed to append single prediction to history: %s", str(e), exc_info=True)
             new_data.to_csv(HISTORY_FILE, index=False)
     else:
         new_data.to_csv(HISTORY_FILE, index=False)
 
 def record_predictions_from_df(df_results: pd.DataFrame, type: str = "Batch"):
     """
-    Record batch predictions to prediction_history.csv from an enriched result DataFrame.
+    Record batch predictions with all 44 features to prediction_history.csv from an enriched result DataFrame.
     """
     if df_results.empty:
         return
@@ -50,14 +62,22 @@ def record_predictions_from_df(df_results: pd.DataFrame, type: str = "Batch"):
         pred = row["Prediction"]
         conf = prob if pred == "Yes" else (100.0 - prob)
         
-        records.append({
+        row_dict = {
             "Timestamp": timestamp,
-            "Age": float(row.get("Age (months)", 0)),
             "Prediction": str(pred),
             "Confidence": float(conf),
             "Risk Level": str(row.get("Risk Level", "Unknown")),
             "Type": str(type)
-        })
+        }
+        
+        # Age extraction for statistics
+        row_dict["Age"] = float(row.get("Age (months)", 0))
+        
+        # Store all 44 features
+        for feat in ALL_FEATURES:
+            row_dict[feat] = row.get(feat, np.nan)
+            
+        records.append(row_dict)
         
     new_data = pd.DataFrame(records)
     
@@ -66,7 +86,9 @@ def record_predictions_from_df(df_results: pd.DataFrame, type: str = "Batch"):
             df = pd.read_csv(HISTORY_FILE)
             df = pd.concat([df, new_data], ignore_index=True)
             df.to_csv(HISTORY_FILE, index=False)
-        except Exception:
+        except Exception as e:
+            from utils.config import logger
+            logger.error("Failed to append batch predictions to history: %s", str(e), exc_info=True)
             new_data.to_csv(HISTORY_FILE, index=False)
     else:
         new_data.to_csv(HISTORY_FILE, index=False)
@@ -79,7 +101,9 @@ def get_prediction_history() -> pd.DataFrame:
         try:
             df = pd.read_csv(HISTORY_FILE)
             return df
-        except Exception:
+        except Exception as e:
+            from utils.config import logger
+            logger.error("Failed to read prediction history: %s", str(e), exc_info=True)
             return pd.DataFrame(columns=["Timestamp", "Age", "Prediction", "Confidence", "Risk Level", "Type"])
     return pd.DataFrame(columns=["Timestamp", "Age", "Prediction", "Confidence", "Risk Level", "Type"])
 

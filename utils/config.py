@@ -43,20 +43,21 @@ APP_SUBTITLE = "Prediksi Terapi Oksigen"
 # Design System Tokens
 # =============================================================================
 COLORS = {
-    "primary": "#0A2E52",
-    "secondary": "#2563EB",
-    "light_blue": "#DBEAFE",
-    "success": "#16A34A",
+    "primary": "#0F4C75",
+    "secondary": "#3282B8",
+    "light_blue": "#E2F0F9",
+    "accent": "#14B8A6",
+    "success": "#22C55E",
     "warning": "#F59E0B",
-    "danger": "#DC2626",
+    "danger": "#EF4444",
     "background": "#F8FAFC",
     "card_bg": "#FFFFFF",
-    "text_primary": "#0F172A",
-    "text_secondary": "#475569",
-    "text_muted": "#64748B",
-    "text_light": "#94A3B8",
-    "border": "#E2E8F0",
-    "border_light": "#F1F5F9",
+    "text_primary": "#1E293B",
+    "text_secondary": "#64748B",
+    "text_muted": "#8892B0",
+    "text_light": "#B0C4DE",
+    "border": "#D6E4F0",
+    "border_light": "#EAF2F8",
 }
 
 # =============================================================================
@@ -127,6 +128,10 @@ BINARY_OPTIONS = {
 for _feat in BINARY_CATEGORICAL_FEATURES:
     if _feat not in BINARY_OPTIONS:
         BINARY_OPTIONS[_feat] = ["No", "Yes"]
+
+# Combined options for all categorical features
+CATEGORICAL_OPTIONS = {**BINARY_OPTIONS, **MULTI_CATEGORICAL_FEATURES}
+
 
 # Complete ordered list of all 44 features (as expected by the model)
 ALL_FEATURES = [
@@ -266,47 +271,45 @@ def _get_global_css():
     return """
     <style>
         /* ================================================================
-           IMPORT GOOGLE FONT
+           IMPORT GOOGLE FONTS & MATERIAL SYMBOLS OUTLINED
            ================================================================ */
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0');
 
         /* ================================================================
-           GLOBAL RESET & FONT
+           GLOBAL RESET & APP BACKGROUND
            ================================================================ */
-        html, body, [class*="css"] {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        html, body, [data-testid="stApp"] {
+            font-family: 'Inter', 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: #F8FAFC !important;
+            color: #1E293B !important;
+        }
+        
+        .stApp {
+            background-color: #F8FAFC !important;
+        }
+
+        /* Set page width content container padding */
+        .stMainBlockContainer {
+            padding: 3rem 4rem !important;
+            max-width: 1200px !important;
+            animation: fadeIn 0.2s ease-out;
         }
 
         /* ================================================================
            KEYFRAME ANIMATIONS
            ================================================================ */
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(16px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
         @keyframes fadeIn {
             from { opacity: 0; }
             to   { opacity: 1; }
         }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50%      { transform: scale(1.08); }
-        }
-        @keyframes heroFloat {
-            0%, 100% { transform: translateY(0); }
-            50%      { transform: translateY(-6px); }
-        }
-        @keyframes shimmer {
-            0%   { background-position: -200% 0; }
-            100% { background-position: 200% 0; }
-        }
 
         /* ================================================================
-           SIDEBAR STYLING
+           SIDEBAR STYLING (CLINICAL NAVY GRADIENT)
            ================================================================ */
         section[data-testid="stSidebar"] {
-            background: linear-gradient(180deg, #0a1628 0%, #112240 50%, #0d2137 100%);
-            color: #e0e8f0;
+            background: linear-gradient(180deg, #0F4C75, #154C79, #1F5D91) !important;
+            border-right: 1px solid #D6E4F0;
         }
 
         section[data-testid="stSidebar"] .stMarkdown h1,
@@ -315,17 +318,16 @@ def _get_global_css():
         section[data-testid="stSidebar"] .stMarkdown p,
         section[data-testid="stSidebar"] .stMarkdown li,
         section[data-testid="stSidebar"] .stMarkdown span {
-            color: #c8d6e5 !important;
+            color: #E2F0F9 !important;
         }
 
         section[data-testid="stSidebar"] hr {
-            border-color: rgba(100, 180, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.08);
         }
 
         /* Sidebar Nav Container & Buttons styling */
         section[data-testid="stSidebar"] .stSidebarNavItems {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding: 0.5rem 0.75rem !important;
         }
 
         /* Enforce custom sidebar ordering using flexbox */
@@ -361,20 +363,21 @@ def _get_global_css():
             order: 4 !important;
         }
 
+        /* Sidebar Link Styling */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"] {
             display: flex !important;
             align-items: center !important;
-            padding: 0.6rem 0.8rem !important;
-            margin: 0.3rem 0 !important;
-            border-radius: 10px !important;
-            color: #a0b4c8 !important;
-            background-color: rgba(255, 255, 255, 0.02) !important;
-            border: 1px solid rgba(255, 255, 255, 0.04) !important;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            padding: 0.65rem 0.85rem !important;
+            margin: 0.15rem 0 !important;
+            border-radius: 12px !important;
+            color: #E2F0F9 !important;
+            background-color: transparent !important;
+            border: 1px solid transparent !important;
+            transition: all 0.15s ease-in-out !important;
             text-decoration: none !important;
             font-size: 0.88rem !important;
             font-weight: 500 !important;
-            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05) !important;
+            border-left: 3px solid transparent !important;
         }
 
         /* Hide default Streamlit page icons */
@@ -384,34 +387,35 @@ def _get_global_css():
 
         /* Hover Navigation Button */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]:hover {
-            background-color: rgba(59, 130, 246, 0.12) !important;
-            color: #60a5fa !important;
-            border-color: rgba(59, 130, 246, 0.3) !important;
-            transform: translateX(4px) !important;
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+            transform: none !important;
         }
 
         /* Active Navigation Button */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][aria-current="page"] {
-            background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%) !important;
+            background-color: rgba(255, 255, 255, 0.1) !important;
             color: #ffffff !important;
-            border-color: #3b82f6 !important;
-            font-weight: 700 !important;
-            box-shadow: 0 4px 12px rgba(29, 78, 216, 0.25) !important;
+            border-left: 3px solid #3282B8 !important;
+            font-weight: 600 !important;
+            box-shadow: none !important;
         }
 
-        /* Custom Icons using pseudo-elements */
+        /* Custom Icons using pseudo-elements with Material Symbols Outlined */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]::before {
+            font-family: 'Material Symbols Outlined' !important;
             display: inline-block !important;
-            font-size: 1.1rem !important;
-            margin-right: 0.6rem !important;
+            font-size: 1.25rem !important;
+            margin-right: 0.65rem !important;
             line-height: 1 !important;
+            vertical-align: middle !important;
+            -webkit-font-smoothing: antialiased;
         }
 
-        /* ── Page-specific sidebar icons ────────────────────────── */
-        /* Dashboard (Main Entrypoint) */
+        /* Page-specific sidebar icons */
         section[data-testid="stSidebar"] ul li:first-child a[data-testid="stSidebarNavLink"]::before,
         section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li:first-child a::before {
-            content: "📊" !important;
+            content: "grid_view" !important;
         }
         section[data-testid="stSidebar"] ul li:first-child a[data-testid="stSidebarNavLink"] span,
         section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li:first-child a span {
@@ -424,142 +428,288 @@ def _get_global_css():
             display: inline-block !important;
         }
 
-        /* Single Prediction */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Single"]::before {
-            content: "🩺" !important;
+            content: "stethoscope" !important;
         }
 
-        /* Batch Prediction */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Batch"]::before {
-            content: "📂" !important;
+            content: "folder" !important;
         }
 
-        /* Clinical Decision Guide */
         section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Clinical"]::before {
-            content: "📘" !important;
+            content: "menu_book" !important;
+        }
+
+        /* Ensure sidebar toggle expand button is always visible, high-contrast, and clickable */
+        button[data-testid="collapsedSidebarMenu"] {
+            display: flex !important;
+            visibility: visible !important;
+            opacity: 1 !important;
+            background-color: #0F4C75 !important;
+            color: #FFFFFF !important;
+            border-radius: 8px !important;
+            padding: 4px !important;
+            box-shadow: 0 2px 8px rgba(15, 76, 117, 0.2) !important;
+            margin-left: 10px !important;
         }
 
         /* ================================================================
-           METRIC CARDS (Streamlit st.metric)
+           METRIC CARDS (Professional White Border Cards)
            ================================================================ */
         div[data-testid="stMetric"] {
-            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
-            border: 1px solid #bdd8f1;
-            border-radius: 16px;
-            padding: 16px 20px;
-            box-shadow: 0 4px 12px rgba(10, 46, 82, 0.06);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            background-color: #FFFFFF !important;
+            border: 1px solid #D6E4F0 !important;
+            border-radius: 16px !important;
+            padding: 18px 22px !important;
+            box-shadow: 0 2px 8px rgba(15, 76, 117, 0.04) !important;
+            transition: transform 0.2s ease, box-shadow 0.2s ease !important;
         }
 
         div[data-testid="stMetric"]:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(10, 46, 82, 0.12);
+            transform: translateY(-2px) !important;
+            box-shadow: 0 4px 16px rgba(15, 76, 117, 0.08) !important;
         }
 
         div[data-testid="stMetric"] label {
-            color: #3b6fa0 !important;
-            font-weight: 600 !important;
-            font-size: 0.8rem !important;
+            color: #64748B !important;
+            font-weight: 500 !important;
+            font-size: 0.82rem !important;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         div[data-testid="stMetric"] [data-testid="stMetricValue"] {
-            color: #0a2e52 !important;
+            color: #1E293B !important;
             font-weight: 700 !important;
+            font-size: 2.2rem !important;
         }
 
         /* ================================================================
-           BUTTONS
+           BUTTONS (Epic / Cerner Medical Grade Style)
            ================================================================ */
+        /* Secondary Button (Outline Style by default) */
         .stButton > button {
-            background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
-            color: white !important;
-            border: none;
-            border-radius: 12px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.3px;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 12px rgba(26, 115, 232, 0.25);
+            background-color: #FFFFFF !important;
+            background-image: none !important;
+            color: #3282B8 !important;
+            border: 1px solid #D6E4F0 !important;
+            border-radius: 12px !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+            transition: all 0.2s ease-in-out !important;
+            box-shadow: none !important;
         }
-
         .stButton > button:hover {
-            background: linear-gradient(135deg, #1557b0 0%, #0d47a1 100%);
-            box-shadow: 0 6px 20px rgba(26, 115, 232, 0.35);
-            transform: translateY(-2px);
+            background-color: #F8FAFC !important;
+            border-color: #3282B8 !important;
+            color: #0F4C75 !important;
+            transform: translateY(-1px) !important;
         }
 
-        .stButton > button:active {
-            transform: translateY(0);
+        /* Primary Button (CDSS Blue Gradient Style) */
+        .stButton > button[data-testid="stBaseButton-primary"],
+        .stButton > button:first-child[style*="background-color: rgb(255, 75, 75)"] {
+            background: linear-gradient(135deg, #0F4C75 0%, #3282B8 100%) !important;
+            color: #FFFFFF !important;
+            border: 1px solid #0F4C75 !important;
+            box-shadow: 0 2px 4px rgba(15, 76, 117, 0.15) !important;
+        }
+        .stButton > button[data-testid="stBaseButton-primary"]:hover {
+            background: linear-gradient(135deg, #145E90 0%, #3E91C9 100%) !important;
+            border-color: #145E90 !important;
+            color: #FFFFFF !important;
+            box-shadow: 0 4px 12px rgba(15, 76, 117, 0.25) !important;
         }
 
-        /* Download button */
+        /* Download Button (Clinical Teal Accent Style) */
         .stDownloadButton > button {
-            background: linear-gradient(135deg, #00897b 0%, #00695c 100%) !important;
-            color: white !important;
-            border: none;
-            border-radius: 12px;
-            padding: 0.6rem 1.5rem;
-            font-weight: 600;
-            box-shadow: 0 4px 12px rgba(0, 137, 123, 0.25);
-            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%) !important;
+            color: #FFFFFF !important;
+            border: 1px solid #14B8A6 !important;
+            border-radius: 12px !important;
+            padding: 0.65rem 1.75rem !important;
+            font-weight: 600 !important;
+            font-size: 15px !important;
+            transition: all 0.2s ease-in-out !important;
+            box-shadow: 0 2px 4px rgba(20, 184, 166, 0.15) !important;
+        }
+        .stDownloadButton > button:hover {
+            background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%) !important;
+            border-color: #0F766E !important;
+            color: #FFFFFF !important;
+            transform: translateY(-1px) !important;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25) !important;
         }
 
-        .stDownloadButton > button:hover {
-            background: linear-gradient(135deg, #00695c 0%, #004d40 100%) !important;
-            box-shadow: 0 6px 20px rgba(0, 137, 123, 0.35);
-            transform: translateY(-2px);
+        .stButton > button:disabled {
+            background: #EAF2F8 !important;
+            border-color: #EAF2F8 !important;
+            color: #B0C4DE !important;
+            box-shadow: none !important;
+            cursor: not-allowed !important;
         }
 
         /* ================================================================
            EXPANDER
            ================================================================ */
         .streamlit-expanderHeader {
-            background-color: #f0f7ff;
-            border-radius: 10px;
-            font-weight: 600;
-            color: #1a3a5c;
+            background-color: #FFFFFF !important;
+            border-radius: 12px !important;
+            font-weight: 500 !important;
+            color: #1E293B !important;
+            border: 1px solid #D6E4F0 !important;
         }
 
         /* ================================================================
            FILE UPLOADER
            ================================================================ */
         [data-testid="stFileUploader"] {
-            border: 2px dashed #90caf9;
-            border-radius: 16px;
-            padding: 1rem;
-            background: #f8fbff;
+            border: 2px dashed #3282B8 !important;
+            border-radius: 16px !important;
+            padding: 1.5rem !important;
+            background-color: #FFFFFF !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        [data-testid="stFileUploader"]:hover {
+            border-color: #0F4C75 !important;
+            background-color: #F8FAFC !important;
         }
 
         /* ================================================================
            TABS
            ================================================================ */
         .stTabs [data-baseweb="tab-list"] {
-            gap: 8px;
+            gap: 4px !important;
+            border-bottom: 1px solid #D6E4F0 !important;
         }
 
         .stTabs [data-baseweb="tab"] {
-            border-radius: 10px 10px 0 0;
-            padding: 8px 20px;
-            font-weight: 500;
+            border-radius: 8px 8px 0 0 !important;
+            padding: 8px 18px !important;
+            font-weight: 500 !important;
+            color: #64748B !important;
+            background-color: transparent !important;
+            border: none !important;
+        }
+
+        .stTabs [data-baseweb="tab"][aria-selected="true"] {
+            color: #0F4C75 !important;
+            font-weight: 600 !important;
+            border-bottom: 2px solid #0F4C75 !important;
         }
 
         /* ================================================================
            DATAFRAME / TABLE
            ================================================================ */
         .stDataFrame {
+            border-radius: 16px !important;
+            overflow: hidden !important;
+            border: 1px solid #D6E4F0 !important;
+        }
+
+        /* Custom HTML Table Styling */
+        .cdss-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
             border-radius: 16px;
             overflow: hidden;
+            border: 1px solid #D6E4F0;
+        }
+        .cdss-table thead tr {
+            background-color: #0F4C75;
+        }
+        .cdss-table th {
+            padding: 0.85rem 1.2rem;
+            text-align: left;
+            color: #FFFFFF;
+            font-weight: 600;
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 2px solid #3282B8;
+        }
+        .cdss-table td {
+            padding: 0.8rem 1.2rem;
+            color: #1E293B;
+            font-size: 14px;
+            border-bottom: 1px solid #EAF2F8;
+        }
+        .cdss-table tbody tr:nth-child(even) {
+            background-color: #F8FAFC;
+        }
+        .cdss-table tbody tr:hover {
+            background-color: #E2F0F9;
         }
 
         /* ================================================================
-           SELECTBOX & NUMBER INPUT
+           SELECTBOX & NUMBER INPUT & DROPDOWNS
            ================================================================ */
-        .stSelectbox > div > div,
-        .stNumberInput > div > div > input {
+        /* Inputs & Textareas */
+        .stNumberInput div > div > input,
+        .stTextInput div > div > input,
+        .stTextArea div > div > textarea,
+        .stDateInput div > div > input {
+            border-radius: 12px !important;
+            border: 1px solid #D6E4F0 !important;
+            background-color: #FFFFFF !important;
+            color: #1E293B !important;
+            padding: 0.5rem 0.75rem !important;
+            font-size: 15px !important;
+            height: 42px !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+
+        /* Selectboxes (Outer Container) */
+        .stSelectbox div[data-baseweb="select"] {
+            border-radius: 12px !important;
+            border: 1px solid #D6E4F0 !important;
+            background-color: #FFFFFF !important;
+            height: 42px !important;
+            transition: all 0.2s ease-in-out !important;
+        }
+        
+        /* Selectbox inner elements text color */
+        .stSelectbox div[data-baseweb="select"] div {
+            color: #1E293B !important;
+        }
+
+        /* Guarantee dropdown options contrast and readability */
+        ul[role="listbox"], [data-baseweb="menu"], [data-baseweb="popover"], .stSelectbox div[role="listbox"] {
+            background-color: #FFFFFF !important;
+            color: #1E293B !important;
+        }
+        ul[role="listbox"] li, [data-baseweb="menu"] li, [role="option"] {
+            color: #1E293B !important;
+            background-color: #FFFFFF !important;
+        }
+        ul[role="listbox"] li:hover, [data-baseweb="menu"] li:hover, [role="option"]:hover {
+            background-color: #E2F0F9 !important;
+            color: #0F4C75 !important;
+        }
+
+        .stNumberInput div > div > input:focus,
+        .stTextInput div > div > input:focus,
+        .stTextArea div > div > textarea:focus,
+        .stDateInput div > div > input:focus,
+        .stSelectbox div[data-baseweb="select"]:focus-within {
+            border-color: #3282B8 !important;
+            box-shadow: 0 0 0 3px rgba(50, 130, 184, 0.12) !important;
+            outline: none !important;
+        }
+
+        /* ================================================================
+           PROGRESS BAR CUSTOMIZATION
+           ================================================================ */
+        div[data-testid="stProgress"] > div > div > div > div {
+            background: linear-gradient(90deg, #3282B8, #0F4C75) !important;
             border-radius: 10px !important;
+        }
+        div[data-testid="stProgress"] {
+            background-color: #E2F0F9 !important;
+            border-radius: 10px !important;
+            height: 8px !important;
         }
 
         /* ================================================================
@@ -568,13 +718,11 @@ def _get_global_css():
         #MainMenu {visibility: hidden;}
         footer {visibility: hidden;}
         
-        /* Make header background transparent to prevent a white stripe, but keep it visible for sidebar button */
         [data-testid="stHeader"] {
             background-color: transparent !important;
             z-index: 99 !important;
         }
 
-        /* Hide Deploy button and hamburger menu specifically, keep the sidebar collapse/expand controls */
         [data-testid="stHeader"] [data-testid="stActionButton"],
         [data-testid="stHeader"] button[aria-label="Deploy"],
         [data-testid="stHeader"] button[aria-label="MainMenu"],
@@ -583,79 +731,79 @@ def _get_global_css():
             display: none !important;
         }
 
-        /* Smooth transition for opening/closing sidebar and main content adjustment */
+        /* Smooth transitions */
         section[data-testid="stSidebar"] {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+            transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
         
         section[data-testid="stMain"] {
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-        }
-
-        /* Smooth transition for content inside sidebar */
-        div[data-testid="stSidebarUserContent"] {
-            transition: opacity 0.2s ease-in-out !important;
-        }
-        
-        /* Keep sidebar scroll position container clean and stable */
-        div[data-testid="stSidebarContent"] {
-            overflow-y: auto !important;
-            scrollbar-gutter: stable;
-        }
-
-        /* ================================================================
-           CUSTOM SCROLLBAR
-           ================================================================ */
-        ::-webkit-scrollbar {
-            width: 6px;
-            height: 6px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #f1f5f9;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #94a3b8;
-            border-radius: 3px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #64748b;
+            transition: margin-left 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
         }
 
         /* ================================================================
            UNIFIED SECTION TITLE
            ================================================================ */
         .section-title-custom {
-            color: #0a2e52;
-            font-weight: 700;
-            font-size: 1.2rem;
-            margin-top: 1.5rem;
-            margin-bottom: 0.8rem;
-            border-left: 4px solid #2563eb;
-            padding-left: 0.6rem;
+            color: #0F4C75;
+            font-weight: 600;
+            font-size: 22px;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            border-left: 4px solid #14B8A6;
+            padding-left: 0.75rem;
+            line-height: 1.2;
         }
 
         /* ================================================================
            UNIFIED CARD STYLE
            ================================================================ */
         .cdss-card {
-            background: #ffffff;
-            border: 1px solid #e2e8f0;
+            background-color: #FFFFFF;
+            border: 1px solid #D6E4F0;
             border-radius: 16px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 12px rgba(10, 46, 82, 0.06);
-            margin-bottom: 1.25rem;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            padding: 24px;
+            box-shadow: 0 2px 8px rgba(15, 76, 117, 0.04);
+            margin-bottom: 20px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         }
         .cdss-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 24px rgba(10, 46, 82, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(15, 76, 117, 0.08);
+            border-color: #3282B8;
         }
 
         /* ================================================================
-           PAGE ANIMATION
+           CLINICAL BADGES (WCAG COMPLIANT HIGH CONTRAST)
            ================================================================ */
-        .stMainBlockContainer {
-            animation: fadeIn 0.4s ease-out;
+        .cdss-badge {
+            display: inline-block !important;
+            padding: 0.3rem 0.75rem !important;
+            border-radius: 8px !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.3px !important;
+            border: 1px solid transparent !important;
+        }
+        .cdss-badge-danger {
+            background-color: #FEF2F2 !important;
+            color: #EF4444 !important;
+            border-color: #FCA5A5 !important;
+        }
+        .cdss-badge-warning {
+            background-color: #FFFBEB !important;
+            color: #F59E0B !important;
+            border-color: #FCD34D !important;
+        }
+        .cdss-badge-success {
+            background-color: #ECFDF5 !important;
+            color: #22C55E !important;
+            border-color: #A7F3D0 !important;
+        }
+        .cdss-badge-info {
+            background-color: #EFF6FF !important;
+            color: #3282B8 !important;
+            border-color: #BFDBFE !important;
         }
     </style>
     """
@@ -664,39 +812,33 @@ def _get_global_css():
 def _get_sidebar_html():
     """Return the sidebar branding HTML."""
     return f"""
-    <div style="text-align: center; padding: 1.2rem 0 0.5rem 0;">
-        <div style="
-            font-size: 2.8rem;
-            margin-bottom: 0.3rem;
-            filter: drop-shadow(0 2px 8px rgba(96,165,250,0.4));
-        ">🫁</div>
-        <h2 style="
-            margin: 0;
-            font-size: 1.5rem;
-            font-weight: 800;
-            background: linear-gradient(135deg, #60a5fa, #93c5fd);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 1px;
-        ">{APP_TITLE}</h2>
+    <div style="text-align: left; padding: 1.5rem 1rem 0.5rem 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
+            <div style="font-size: 1.8rem; line-height: 1;">🫁</div>
+            <h2 style="
+                margin: 0;
+                font-size: 1.25rem;
+                font-weight: 700;
+                color: #ffffff !important;
+                letter-spacing: -0.5px;
+            ">{APP_TITLE}</h2>
+        </div>
         <p style="
-            margin: 0.2rem 0 0 0;
+            margin: 0;
             font-size: 0.72rem;
-            color: #64748b !important;
-            font-weight: 400;
-            letter-spacing: 0.3px;
+            color: #E2F0F9 !important;
+            line-height: 1.3;
         ">{APP_SUBTITLE}</p>
         <div style="
             display: inline-block;
             margin-top: 0.5rem;
-            background: rgba(59, 130, 246, 0.15);
-            border: 1px solid rgba(96, 165, 250, 0.3);
-            border-radius: 50px;
-            padding: 0.15rem 0.6rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            padding: 0.1rem 0.4rem;
             font-size: 0.65rem;
-            color: #60a5fa !important;
-            font-weight: 700;
-            letter-spacing: 0.5px;
+            color: #E2F0F9 !important;
+            font-weight: 600;
         ">v{APP_VERSION}</div>
     </div>
     """
@@ -706,21 +848,19 @@ def _get_sidebar_info_html():
     """Return the sidebar info card HTML."""
     return """
     <div style="
-        padding: 0.8rem;
-        background: rgba(59, 130, 246, 0.08);
-        border-radius: 10px;
-        border-left: 3px solid #3b82f6;
-        margin: 0.5rem 0;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: 8px;
+        border-left: 3px solid #3282B8;
+        margin: 0.5rem 1rem;
     ">
         <p style="
             margin: 0;
-            font-size: 0.75rem;
-            color: #94a3b8 !important;
-            line-height: 1.5;
+            font-size: 0.72rem;
+            color: #E2F0F9 !important;
+            line-height: 1.4;
         ">
-            Sistem Pendukung Keputusan Klinis untuk prediksi kebutuhan
-            terapi oksigen pada pasien anak dengan <strong style="color: #60a5fa !important;">ISPA</strong>
-            dan <strong style="color: #60a5fa !important;">Pneumonia</strong>.
+            Clinical Decision Support System for Pediatric Oxygen Therapy.
         </p>
     </div>
     """
@@ -729,9 +869,9 @@ def _get_sidebar_info_html():
 def _get_sidebar_nav_label():
     """Return sidebar navigation section label."""
     return """
-    <div style="padding: 0 0.5rem;">
-        <p style="font-size: 0.7rem; color: #475569 !important; margin-bottom: 0.4rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-            Navigasi
+    <div style="padding: 0 1rem; margin-top: 0.75rem;">
+        <p style="font-size: 0.65rem; color: #E2F0F9 !important; opacity: 0.7; margin-bottom: 0.4rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+            Menu
         </p>
     </div>
     """
@@ -741,31 +881,28 @@ def _get_sidebar_footer_html():
     """Return the sidebar footer HTML."""
     return f"""
     <div style="
-        padding: 0.8rem 0.5rem;
+        padding: 1.25rem 1rem 1rem 1rem;
         margin-top: 1.5rem;
-        border-top: 1px solid #475569;
-        text-align: center;
-        font-family: 'Inter', sans-serif;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
     ">
         <p style="
             margin: 0;
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 700;
-            color: #64748b !important;
-        ">OxyPredict v{APP_VERSION}</p>
+            color: #E2F0F9 !important;
+        ">OxyPredict CDSS</p>
         <p style="
             margin: 0.2rem 0 0 0;
-            font-size: 0.68rem;
-            color: #64748b !important;
-            line-height: 1.4;
+            font-size: 0.62rem;
+            color: #B0C4DE !important;
+            line-height: 1.3;
         ">
-            Clinical Decision Support System<br>
-            Pediatric Acute Respiratory Infection
+            Undergraduate Research Project
         </p>
         <p style="
             margin: 0.4rem 0 0 0;
-            font-size: 0.65rem;
-            color: #475569 !important;
+            font-size: 0.62rem;
+            color: #8892B0 !important;
         ">© 2026</p>
     </div>
     """
@@ -798,44 +935,51 @@ def setup_page(page_title: str):
 
 def render_page_header(icon: str, title: str, subtitle: str) -> str:
     """
-    Return HTML for a standardized page hero header.
+    Return HTML for a standardized clean, minimalist clinical page header.
     Usage: st.markdown(render_page_header("📊", "Dashboard", "..."), unsafe_allow_html=True)
     """
     return f"""
 <div style="
-    background: linear-gradient(135deg, #0a2e52 0%, #1a4a7a 50%, #2563eb 100%);
-    border-radius: 16px;
+    background: linear-gradient(135deg, #0F4C75 0%, #1F6FA7 45%, #3282B8 100%);
     padding: 2rem 2.5rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 8px 32px rgba(10, 46, 82, 0.18);
-    position: relative;
-    overflow: hidden;
+    border-radius: 16px;
+    margin-bottom: 2.2rem;
+    box-shadow: 0 4px 16px rgba(15, 76, 117, 0.06);
+    animation: fadeIn 0.2s ease-out;
+    color: #FFFFFF;
 ">
     <div style="
-        position: absolute;
-        top: -60%;
-        right: -15%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(59,130,246,0.12) 0%, transparent 70%);
-        border-radius: 50%;
-    "></div>
-    <div style="position: relative; z-index: 1;">
-        <div style="font-size: 2.2rem; margin-bottom: 0.5rem; animation: heroFloat 3s ease-in-out infinite;">{icon}</div>
-        <h1 style="
-            margin: 0;
-            color: white;
-            font-size: 1.8rem;
-            font-weight: 800;
-            letter-spacing: -0.3px;
-        ">{title}</h1>
-        <p style="
-            margin: 0.4rem 0 0 0;
-            color: #93c5fd;
-            font-size: 0.95rem;
-            max-width: 700px;
-        ">{subtitle}</p>
+        font-size: 13px;
+        color: #E2F0F9;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+        margin-bottom: 0.4rem;
+        opacity: 0.9;
+    ">
+        OxyPredict &nbsp;&rsaquo;&nbsp; {title}
     </div>
+    <h1 style="
+        margin: 0;
+        color: #FFFFFF;
+        font-size: 32px;
+        font-weight: 700;
+        letter-spacing: -0.5px;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    ">
+        <span style="font-size: 28px; line-height: 1;">{icon}</span>
+        {title}
+    </h1>
+    <p style="
+        margin: 0.4rem 0 0 0;
+        color: #E2F0F9;
+        font-size: 15px;
+        line-height: 1.5;
+        font-weight: 400;
+        opacity: 0.9;
+    ">{subtitle}</p>
 </div>
 """
 
@@ -847,21 +991,9 @@ def render_section_divider() -> str:
     """
     return """
 <div style="
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin: 1.5rem 0;
-">
-    <div style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #cbd5e1, transparent);"></div>
-    <div style="
-        width: 6px;
-        height: 6px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #2563eb, #60a5fa);
-        box-shadow: 0 0 8px rgba(37,99,235,0.3);
-    "></div>
-    <div style="flex: 1; height: 1px; background: linear-gradient(90deg, transparent, #cbd5e1, transparent);"></div>
-</div>
+    margin: 2rem 0;
+    border-bottom: 1px solid #D6E4F0;
+"></div>
 """
 
 
@@ -873,31 +1005,22 @@ def render_footer() -> str:
     return f"""
 <div style="
     text-align: center;
-    padding: 2rem 0 1rem 0;
-    margin-top: 2rem;
-    border-top: 1px solid #e2e8f0;
+    padding: 2.5rem 0 1.5rem 0;
+    margin-top: 3.5rem;
+    border-top: 1px solid #D6E4F0;
 ">
     <div style="
-        font-size: 1.1rem;
-        font-weight: 800;
-        background: linear-gradient(135deg, #0a2e52, #2563eb);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        font-size: 16px;
+        font-weight: 700;
+        color: #0F4C75;
         margin-bottom: 0.3rem;
     ">{APP_TITLE} v{APP_VERSION}</div>
-    <p style="margin: 0; color: #64748b; font-size: 0.78rem; line-height: 1.6;">
-        Clinical Decision Support System<br>
-        Powered by Random Forest + SHAP
+    <p style="margin: 0; color: #64748B; font-size: 13px; line-height: 1.6;">
+        Clinical Decision Support System for Oxygen Therapy Assessment
     </p>
-    <p style="margin: 0.3rem 0 0 0; color: #94a3b8; font-size: 0.7rem;">
-        Developed for Undergraduate Thesis Research
+    <p style="margin: 0.3rem 0 0 0; color: #8892B0; font-size: 13px;">
+        Developed for Academic Research & Clinical Reference
     </p>
-    <div style="display: flex; gap: 0.4rem; justify-content: center; flex-wrap: wrap; margin-top: 0.6rem;">
-        <span style="font-size: 0.62rem; color: #64748b; background: #f1f5f9; border-radius: 50px; padding: 0.2rem 0.6rem; font-weight: 500;">Streamlit</span>
-        <span style="font-size: 0.62rem; color: #64748b; background: #f1f5f9; border-radius: 50px; padding: 0.2rem 0.6rem; font-weight: 500;">scikit-learn</span>
-        <span style="font-size: 0.62rem; color: #64748b; background: #f1f5f9; border-radius: 50px; padding: 0.2rem 0.6rem; font-weight: 500;">SHAP</span>
-        <span style="font-size: 0.62rem; color: #64748b; background: #f1f5f9; border-radius: 50px; padding: 0.2rem 0.6rem; font-weight: 500;">© 2026</span>
-    </div>
 </div>
 """
 
@@ -909,27 +1032,28 @@ def render_empty_state(icon: str, title: str, description: str) -> str:
     """
     return f"""
 <div style="
-    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    border: 2px dashed #cbd5e1;
+    background-color: #FFFFFF;
+    border: 1px dashed #3282B8;
     border-radius: 16px;
-    padding: 3rem 2rem;
+    padding: 3.5rem 2rem;
     text-align: center;
     margin: 1.5rem 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
 ">
     <div style="
-        font-size: 3rem;
-        margin-bottom: 0.8rem;
-        animation: pulse 2.5s ease-in-out infinite;
+        font-size: 2.8rem;
+        margin-bottom: 1rem;
+        line-height: 1;
     ">{icon}</div>
     <h3 style="
         margin: 0 0 0.5rem 0;
-        color: #0a2e52;
+        color: #1E293B;
         font-size: 1.1rem;
-        font-weight: 700;
+        font-weight: 600;
     ">{title}</h3>
     <p style="
         margin: 0;
-        color: #64748b;
+        color: #64748B;
         font-size: 0.88rem;
         max-width: 400px;
         margin-left: auto;
@@ -938,3 +1062,74 @@ def render_empty_state(icon: str, title: str, description: str) -> str:
     ">{description}</p>
 </div>
 """
+
+
+# =============================================================================
+# Python Logging Setup & Status UI Cards
+# =============================================================================
+import logging
+import streamlit as st
+
+# Ensure logs folder exists
+os.makedirs(os.path.join(BASE_DIR, "logs"), exist_ok=True)
+LOG_FILE = os.path.join(BASE_DIR, "logs", "app.log")
+
+logging.basicConfig(
+    filename=LOG_FILE,
+    filemode="a",
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+    level=logging.ERROR
+)
+logger = logging.getLogger("OxyPredict")
+
+
+def render_status_card(icon: str, title: str, message: str, border_color: str, bg_color: str, text_color: str) -> str:
+    """Helper to render a styled clinical status card."""
+    return f"""
+    <div style="
+        border-left: 5px solid {border_color};
+        background-color: {bg_color};
+        border-radius: 12px;
+        padding: 1.25rem 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.02);
+        display: flex;
+        align-items: flex-start;
+        gap: 1rem;
+    ">
+        <div style="font-size: 1.5rem; line-height: 1; margin-top: 0.1rem;">{icon}</div>
+        <div style="flex: 1;">
+            <h4 style="margin: 0 0 0.4rem 0; color: #1E293B; font-size: 0.95rem; font-weight: 700;">{title}</h4>
+            <div style="margin: 0; color: {text_color}; font-size: 0.88rem; line-height: 1.6; font-weight: 500;">
+                {message}
+            </div>
+        </div>
+    </div>
+    """
+
+
+def show_error_card(title: str, message: str, retry_button: bool = False):
+    """Display a professional error card to the user."""
+    card_html = render_status_card("❌", title, message, "#EF4444", "#FEF2F2", "#B91C1C")
+    st.markdown(card_html, unsafe_allow_html=True)
+    if retry_button:
+        if st.button("🔄 Coba Lagi (Retry)"):
+            st.rerun()
+
+
+def show_warning_card(title: str, message: str):
+    """Display a professional warning card to the user."""
+    card_html = render_status_card("⚠️", title, message, "#F59E0B", "#FFFBEB", "#B45309")
+    st.markdown(card_html, unsafe_allow_html=True)
+
+
+def show_success_card(title: str, message: str):
+    """Display a professional success card to the user."""
+    card_html = render_status_card("✅", title, message, "#22C55E", "#ECFDF5", "#15803D")
+    st.markdown(card_html, unsafe_allow_html=True)
+
+
+def show_info_card(title: str, message: str):
+    """Display a professional info card to the user."""
+    card_html = render_status_card("ℹ️", title, message, "#3282B8", "#EFF6FF", "#1D4ED8")
+    st.markdown(card_html, unsafe_allow_html=True)

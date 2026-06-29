@@ -1,0 +1,24 @@
+2026-06-29 13:47:43,029 - OxyPredict - ERROR - Single prediction failed: name 'whezing_val' is not defined
+Traceback (most recent call last):
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\Baru\oxygen_therapy_predictor\pages\Single_Prediction.py", line 568, in <module>
+    if whezing_val == 1:
+       ^^^^^^^^^^^
+NameError: name 'whezing_val' is not defined
+2026-06-29 14:25:22,236 - OxyPredict - ERROR - Single prediction failed: name 'col_res_left' is not defined
+Traceback (most recent call last):
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\Baru\oxygen_therapy_predictor\pages\Single_Prediction.py", line 603, in <module>
+    with col_res_left:
+         ^^^^^^^^^^^^
+NameError: name 'col_res_left' is not defined
+2026-06-29 14:29:46,761 - OxyPredict - ERROR - Single prediction failed: name 'col_res_left' is not defined
+Traceback (most recent call last):
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\Baru\oxygen_therapy_predictor\pages\Single_Prediction.py", line 603, in <module>
+    with col_res_left:
+         ^^^^^^^^^^^^
+NameError: name 'col_res_left' is not defined
+2026-06-29 14:31:11,370 - OxyPredict - ERROR - Single prediction failed: name 'col_res_left' is not defined
+Traceback (most recent call last):
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\Baru\oxygen_therapy_predictor\pages\Single_Prediction.py", line 603, in <module>
+    with col_res_left:
+         ^^^^^^^^^^^^
+NameError: name 'col_res_left' is not defined

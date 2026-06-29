@@ -11,11 +11,22 @@ import numpy as np
 from utils.config import MODEL_PATH, ALL_FEATURES
 
 
+class ModelLoadError(Exception):
+    """Custom exception raised when the model fails to load."""
+    pass
+
+
 @st.cache_resource
 def load_model():
     """Load the trained Random Forest pipeline model."""
-    model = joblib.load(MODEL_PATH)
-    return model
+    try:
+        import joblib
+        model = joblib.load(MODEL_PATH)
+        return model
+    except Exception as e:
+        from utils.config import logger
+        logger.error("Failed to load model from path %s: %s", MODEL_PATH, str(e), exc_info=True)
+        raise ModelLoadError(f"Model loading failed: {e}")
 
 
 def predict_single(input_data: dict) -> tuple:

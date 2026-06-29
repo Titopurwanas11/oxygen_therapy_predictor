@@ -23,7 +23,7 @@ def create_pie_chart(df: pd.DataFrame):
         names="Status",
         values="Count",
         color="Status",
-        color_discrete_map={"Need Oxygen": "#ef4444", "No Oxygen": "#10b981"},
+        color_discrete_map={"Need Oxygen": "#EF4444", "No Oxygen": "#22C55E"},
         hole=0.4,
     )
     fig.update_layout(
@@ -59,7 +59,7 @@ def create_risk_distribution_chart(df: pd.DataFrame):
         x="Risk Level",
         y="Count",
         color="Risk Level",
-        color_discrete_map={"Low": "#10b981", "Medium": "#f59e0b", "High": "#ef4444"},
+        color_discrete_map={"Low": "#22C55E", "Medium": "#F59E0B", "High": "#EF4444"},
         category_orders={"Risk Level": ["Low", "Medium", "High"]}
     )
     fig.update_layout(
@@ -82,7 +82,7 @@ def create_probability_histogram(df: pd.DataFrame):
         df,
         x="Probability",
         nbins=20,
-        color_discrete_sequence=["#3b82f6"],
+        color_discrete_sequence=["#3282B8"],
         labels={"Probability": "Prediction Probability (%)"}
     )
     fig.update_layout(
@@ -124,7 +124,7 @@ def create_avg_prob_per_risk_chart(df: pd.DataFrame):
         x="Risk Group",
         y="Average Probability (%)",
         color="Risk Group",
-        color_discrete_map={"Low": "#10b981", "Medium": "#f59e0b", "High": "#ef4444"},
+        color_discrete_map={"Low": "#22C55E", "Medium": "#F59E0B", "High": "#EF4444"},
         category_orders={"Risk Group": ["Low", "Medium", "High"]}
     )
     fig.update_layout(
@@ -157,11 +157,11 @@ def create_confidence_histogram(df: pd.DataFrame):
         y="Count",
         color="Confidence Level",
         color_discrete_map={
-            "Very High": "#166534",
-            "High": "#16a34a",
-            "Moderate": "#ca8a04",
-            "Low": "#ea580c",
-            "Very Low": "#dc2626"
+            "Very High": "#15803D",
+            "High": "#22C55E",
+            "Moderate": "#F59E0B",
+            "Low": "#EA580C",
+            "Very Low": "#EF4444"
         },
         category_orders={"Confidence Level": levels_order}
     )
@@ -186,15 +186,15 @@ def create_avg_confidence_gauge(avg_conf: float):
         value=avg_conf,
         domain={'x': [0, 1], 'y': [0, 1]},
         gauge={
-            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#0a2e52"},
-            'bar': {'color': "#2563eb"},
+            'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#0F4C75"},
+            'bar': {'color': "#3282B8"},
             'bgcolor': "white",
             'borderwidth': 1.5,
-            'bordercolor': "#cbd5e1",
+            'bordercolor': "#D6E4F0",
             'steps': [
-                {'range': [0, 70], 'color': 'rgba(220, 38, 38, 0.08)'},
+                {'range': [0, 70], 'color': 'rgba(239, 68, 68, 0.08)'},
                 {'range': [70, 85], 'color': 'rgba(245, 158, 11, 0.08)'},
-                {'range': [85, 100], 'color': 'rgba(22, 163, 74, 0.08)'}
+                {'range': [85, 100], 'color': 'rgba(34, 197, 94, 0.08)'}
             ],
         }
     ))
@@ -202,7 +202,7 @@ def create_avg_confidence_gauge(avg_conf: float):
         margin=dict(t=30, b=10, l=15, r=15),
         height=300,
         paper_bgcolor="rgba(0,0,0,0)",
-        font={'color': "#0a2e52", 'family': "Inter"}
+        font={'color': "#0F172A", 'family': "Inter"}
     )
     return fig
 
@@ -223,7 +223,7 @@ def create_prediction_ratio_donut(df: pd.DataFrame):
         names="Status",
         values="Count",
         color="Status",
-        color_discrete_map={"Need Oxygen": "#ef4444", "No Oxygen": "#10b981"},
+        color_discrete_map={"Need Oxygen": "#EF4444", "No Oxygen": "#22C55E"},
         hole=0.6,
     )
     fig.update_layout(

@@ -13,6 +13,7 @@ import plotly.graph_objects as go
 
 from utils.config import (
     setup_page,
+    render_page_header,
     render_section_divider,
     render_footer,
     render_empty_state,
@@ -88,48 +89,18 @@ st_html("""
 df_history = get_prediction_history()
 
 # ─── SECTION 1: COMPACT CDSS HEADER ──────────────────────────────────────────
-st_html("""
-<div style="
-    background: linear-gradient(135deg, #0a2e52 0%, #153e75 50%, #1e40af 100%);
-    border-radius: 16px;
-    padding: 1.5rem 2rem;
-    margin-bottom: 1.5rem;
-    box-shadow: 0 4px 20px rgba(10, 46, 82, 0.15);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-">
-    <div style="flex: 1; min-width: 280px;">
-        <h1 style="margin: 0; color: white; font-size: 1.8rem; font-weight: 800; letter-spacing: -0.5px;">🫁 OxyPredict</h1>
-        <p style="margin: 0.3rem 0 0 0; color: #93c5fd; font-size: 0.88rem; line-height: 1.4; font-weight: 400;">
-            Clinical Decision Support System for Oxygen Therapy Assessment in Pediatric Acute Respiratory Infection and Pneumonia.
-        </p>
-    </div>
-    <div style="
-        background: rgba(255, 255, 255, 0.15);
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        padding: 0.4rem 1rem;
-        border-radius: 50px;
-        color: white;
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.5px;
-        white-space: nowrap;
-        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-    ">
-        Random Forest + Explainable AI (SHAP)
-    </div>
-</div>
-""")
+st_html(render_page_header(
+    "📊",
+    "Clinical Activity Dashboard",
+    "Real-time CDSS operations, patient risk distributions, diagnostic logs, and model telemetry."
+))
 
 # ─── CHECK EMPTY STATE ───────────────────────────────────────────────────────
 if df_history.empty:
     st_html(render_empty_state(
         "📊",
-        "Tidak ada data prediksi",
-        "Prediction statistics will appear after users perform Single Prediction or Batch Prediction."
+        "No prediction history available",
+        "Run a prediction to start monitoring model usage."
     ))
 else:
     # Prepare statistics
@@ -163,12 +134,12 @@ else:
     need_oxygen_pct = (need_oxygen / total_predictions) * 100 if total_predictions > 0 else 0.0
     
     st_html(f"""
-    <div class="cdss-card" style="border-left: 5px solid #2563eb; background-color: #f8fafc; padding: 1.25rem 1.5rem;">
-        <p style="margin: 0; color: #1e3a8a; font-size: 0.95rem; font-weight: 600; line-height: 1.6;">
-            💡 Clinical Summary: In the last {total_predictions} predictions, 
+    <div class="cdss-card" style="border-left: 5px solid #3282B8;">
+        <p style="margin: 0; color: #1E293B; font-size: 16px; font-weight: 500; line-height: 1.7;">
+            <strong style="color: #0F4C75;">Clinical Summary:</strong> In the last {total_predictions} predictions, 
             {need_oxygen_pct:.0f}% of patients were classified as requiring oxygen therapy. 
             The average prediction confidence was {avg_confidence:.1f}%. 
-            Most patients were categorized as {most_common_risk}.
+            Most patients were categorized as <strong>{most_common_risk}</strong>.
         </p>
     </div>
     """)
@@ -183,14 +154,14 @@ else:
     col_chart1, col_chart2 = st.columns(2)
     
     with col_chart1:
-        st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Prediction Distribution</h4>")
+        st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;\">Prediction Distribution</h4>")
         
         # Donut Chart
         fig_donut = go.Figure(data=[go.Pie(
             labels=["Need Oxygen", "No Oxygen"],
             values=[need_oxygen, no_oxygen],
             hole=.4,
-            marker_colors=["#1e3b5f", "#60a5fa"],
+            marker_colors=["#0F4C75", "#3282B8"],
             textinfo="percent+label",
             showlegend=False
         )])
@@ -202,12 +173,12 @@ else:
         st_html("</div>")
         
     with col_chart2:
-        st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Risk Level Distribution</h4>")
+        st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;\">Risk Level Distribution</h4>")
         
         # Risk levels distribution chart
         r_counts = []
         r_labels = ["Low Risk", "Moderate Risk", "High Risk", "Very High Risk"]
-        r_colors = ["#16a34a", "#ca8a04", "#ea580c", "#dc2626"]
+        r_colors = ["#22C55E", "#F59E0B", "#EA580C", "#EF4444"]
         
         for r_lbl in r_labels:
             r_counts.append(int((df_history["Risk Level"].str.contains(r_lbl, case=False, na=False)).sum()))
@@ -228,7 +199,7 @@ else:
         st.plotly_chart(fig_risk, use_container_width=True, config={'displayModeBar': False})
         st_html("</div>")
         
-    st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;\">Model Confidence Distribution</h4>")
+    st_html("<div class=\"cdss-card\"><h4 style=\"font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;\">Model Confidence Distribution</h4>")
     
     # Confidence distribution bar chart
     c_bins = ["60–70%", "70–80%", "80–90%", "90–100%"]
@@ -248,7 +219,7 @@ else:
     fig_conf = go.Figure(data=[go.Bar(
         x=c_bins,
         y=c_counts,
-        marker_color="#2563eb",
+        marker_color="#3282B8",
         text=c_counts,
         textposition="auto"
     )])
@@ -281,7 +252,7 @@ else:
                 labels={"Date": "Tanggal", "Predictions": "Jumlah Prediksi"},
                 markers=True
             )
-            fig_trend.update_traces(line_color="#2563eb", marker=dict(size=8, color="#0a2e52"))
+            fig_trend.update_traces(line_color="#3282B8", marker=dict(size=8, color="#0F4C75"))
             fig_trend.update_layout(
                 margin=dict(t=10, b=10, l=10, r=10),
                 height=240,
@@ -302,7 +273,7 @@ else:
     with col_table:
         st_html("""
         <div class="cdss-card" style="height: 100%;">
-            <h4 style="font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;">📋 Recent Predictions (Last 10)</h4>
+            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">📋 Recent Predictions (Last 10)</h4>
         """)
         
         # Get last 10 entries ordered by timestamp descending
@@ -323,7 +294,7 @@ else:
     with col_stats:
         st_html("""
         <div class="cdss-card" style="height: 100%;">
-            <h4 style="font-size: 0.95rem; color: #0a2e52; margin: 0 0 1rem 0; font-weight: 700;">⚙️ System Usage Statistics</h4>
+            <h4 style="font-size: 18px; color: #0F172A; margin: 0 0 1rem 0; font-weight: 700;">⚙️ System Usage Statistics</h4>
             <table class="usage-table">
         """)
         
