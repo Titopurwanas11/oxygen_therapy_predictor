@@ -43,7 +43,7 @@ try:
 except ImportError:
     use_plotly = False
 
-st.set_page_config(page_title="Prediksi Pasien — OxyPredict", page_icon="🫁", layout="wide")
+st.set_page_config(page_title="Prediksi Pasien — OxyPredict", page_icon="assets/favicon-64x64.png", layout="wide")
 setup_page("Prediksi Pasien — OxyPredict")
 init_analytics_state()
 
@@ -104,7 +104,6 @@ def register_interaction(feat):
 # ─── Placeholder Declarations ────────────────────────────────────────────────
 # Placeholders are rendered first, and updated dynamically at the end of the script
 header_placeholder = st.empty()
-tracker_placeholder = st.empty()
 alerts_placeholder = st.empty()
 
 # ─── Patient Input Form ──────────────────────────────────────────────────────
@@ -201,25 +200,6 @@ else:
     bmi_color = "#F59E0B" # Orange
     bmi_bg = "rgba(245, 158, 11, 0.08)"
 
-# Calculate Form Completion Progress
-# A field is completed if it's interacted with OR if its value has changed from baseline default
-filled_count = 0
-for feat in ALL_FEATURES:
-    key_feat = f"input_{feat}"
-    current_val = st.session_state.get(key_feat)
-    
-    if feat in NUMERICAL_FEATURES:
-        _, _, default_val, _ = NUMERICAL_RANGES[feat]
-    elif feat in MULTI_CATEGORICAL_FEATURES:
-        default_val = MULTI_CATEGORICAL_FEATURES[feat][-1]
-    elif feat in BINARY_OPTIONS:
-        default_val = BINARY_OPTIONS[feat][0]
-        
-    if feat in st.session_state.interacted_fields or current_val != default_val:
-        filled_count += 1
-
-completion_pct = int((filled_count / 44.0) * 100)
-
 # Calculate Clinical Alerts
 is_tachypnea = False
 if age_months < 2:
@@ -309,36 +289,6 @@ with header_placeholder.container():
                     {bmi_category}
                 </div>
             </div>
-        </div>
-    </div>
-    """)
-
-with tracker_placeholder.container():
-    if completion_pct < 40:
-        progress_color = "#EF4444" # Red
-        progress_bg = "#FEF2F2"
-    elif 40 <= completion_pct < 70:
-        progress_color = "#F59E0B" # Orange
-        progress_bg = "#FFFBEB"
-    else:
-        progress_color = "#22C55E" # Green
-        progress_bg = "#ECFDF5"
-
-    st_html(f"""
-    <div style="
-        background-color: {progress_bg};
-        border: 1px solid {progress_color}30;
-        border-radius: 12px;
-        padding: 1rem;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.01);
-    ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem;">
-            <span style="font-size: 15px; font-weight: 700; color: #0F172A;">Form Completion Progress</span>
-            <span style="font-size: 0.85rem; font-weight: 700; color: {progress_color};">{completion_pct}% Complete</span>
-        </div>
-        <div style="background-color: #e2e8f0; border-radius: 6px; height: 10px; width: 100%; overflow: hidden;">
-            <div style="background-color: {progress_color}; height: 100%; width: {completion_pct}%; transition: width 0.3s ease;"></div>
         </div>
     </div>
     """)
@@ -980,8 +930,8 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 # Already computed upfront
                 st_html(f"""
                 <div class="cdss-card" style="border-left: 6px solid #3282B8; margin-top: 1.5rem; margin-bottom: 2rem;">
-                    <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 1rem;">
-                        <span class="material-symbols-outlined" style="font-size: 24px; color: #3282B8; line-height: 1;">clinical_research</span>
+                    <div style="display: flex; align-items: center; gap: 0.8rem; margin-bottom: 1rem;">
+                        <span class="material-symbols-outlined" style="font-size: 28px; color: #3282B8; line-height: 1; flex-shrink: 0;">psychology</span>
                         <div>
                             <h4 style="margin: 0; color: #0F172A; font-weight: 700; font-size: 18px; letter-spacing: -0.3px; line-height: 1.2;">
                                 AI Clinical Summary

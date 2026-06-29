@@ -25,7 +25,7 @@ from utils.monitoring import get_prediction_history, calculate_confidence_distri
 # =============================================================================
 st.set_page_config(
     page_title="Dashboard — OxyPredict",
-    page_icon="🫁",
+    page_icon="assets/favicon-64x64.png",
     layout="wide",
     initial_sidebar_state="expanded",
 )

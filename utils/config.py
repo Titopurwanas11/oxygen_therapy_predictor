@@ -270,6 +270,106 @@ def _get_global_css():
     """Return the unified global CSS for the entire application."""
     return """
     <style>
+        /* Hide default navigation */
+        [data-testid="stSidebarNav"] {
+            display: none !important;
+        }
+
+        /* Custom logo header container */
+        .sidebar-logo-header {
+            background-color: #FFFFFF !important;
+            border-radius: 16px;
+            padding: 0.5rem;
+            margin: 1rem 1rem 1.5rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            height: 90px !important;
+            overflow: hidden !important;
+        }
+
+        .sidebar-logo-img {
+            width: 100% !important;
+            height: auto !important;
+            object-fit: contain;
+            transform: scale(1.4) !important;
+        }
+
+        .sidebar-logo-text {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #E2F0F9 !important;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+        
+        /* Custom navigation menu */
+        .sidebar-nav-menu {
+            padding: 0 1rem;
+        }
+        
+        .sidebar-nav-item {
+            display: flex !important;
+            align-items: center !important;
+            padding: 0.9rem 1.2rem !important;
+            margin-bottom: 0.5rem !important;
+            border-radius: 12px !important;
+            color: #B0C4DE !important;
+            background-color: transparent !important;
+            text-decoration: none !important;
+            font-size: 1rem !important;
+            font-weight: 500 !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            border: none !important;
+        }
+        
+        .sidebar-nav-item:hover {
+            background-color: rgba(255, 255, 255, 0.05) !important;
+            color: #E2F0F9 !important;
+        }
+        
+        .sidebar-nav-item.active {
+            background-color: rgba(50, 130, 184, 0.4) !important;
+            color: #E2F0F9 !important;
+        }
+        
+        .sidebar-nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-right: 1rem;
+            opacity: 0.8;
+        }
+        
+        .sidebar-nav-item.active .sidebar-nav-icon {
+            opacity: 1;
+        }
+        
+        /* Version and status footer */
+        .sidebar-footer {
+            margin-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 1rem 0.5rem 0.5rem 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .sidebar-version {
+            font-size: 0.9rem;
+            color: #8892B0 !important;
+            font-weight: 500;
+        }
+        
+        .sidebar-status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #22C55E;
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.6);
+        }
+
         /* ================================================================
            IMPORT GOOGLE FONTS & MATERIAL SYMBOLS OUTLINED
            ================================================================ */
@@ -312,6 +412,10 @@ def _get_global_css():
             border-right: 1px solid #D6E4F0;
         }
 
+        div[data-testid="stSidebarUserContent"] {
+            padding-top: 0rem !important;
+        }
+
         section[data-testid="stSidebar"] .stMarkdown h1,
         section[data-testid="stSidebar"] .stMarkdown h2,
         section[data-testid="stSidebar"] .stMarkdown h3,
@@ -327,120 +431,10 @@ def _get_global_css():
 
         /* Sidebar Nav Container & Buttons styling */
         section[data-testid="stSidebar"] .stSidebarNavItems {
-            padding: 0.5rem 0.75rem !important;
+            padding: 1rem 0 !important;
         }
 
-        /* Enforce custom sidebar ordering using flexbox */
-        section[data-testid="stSidebar"] .stSidebarNavItems,
-        section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] ul,
-        section[data-testid="stSidebar"] ul[data-testid="stSidebarNavItems"] {
-            display: flex !important;
-            flex-direction: column !important;
-        }
-
-        /* Order 1: Dashboard */
-        section[data-testid="stSidebar"] ul li:first-child,
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href="/"],
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]:first-of-type {
-            order: 1 !important;
-        }
-
-        /* Order 2: Single Prediction */
-        section[data-testid="stSidebar"] ul li:has(a[href*="Single"]),
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Single"] {
-            order: 2 !important;
-        }
-
-        /* Order 3: Batch Prediction */
-        section[data-testid="stSidebar"] ul li:has(a[href*="Batch"]),
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Batch"] {
-            order: 3 !important;
-        }
-
-        /* Order 4: Clinical Decision Guide */
-        section[data-testid="stSidebar"] ul li:has(a[href*="Clinical"]),
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Clinical"] {
-            order: 4 !important;
-        }
-
-        /* Sidebar Link Styling */
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"] {
-            display: flex !important;
-            align-items: center !important;
-            padding: 0.65rem 0.85rem !important;
-            margin: 0.15rem 0 !important;
-            border-radius: 12px !important;
-            color: #E2F0F9 !important;
-            background-color: transparent !important;
-            border: 1px solid transparent !important;
-            transition: all 0.15s ease-in-out !important;
-            text-decoration: none !important;
-            font-size: 0.88rem !important;
-            font-weight: 500 !important;
-            border-left: 3px solid transparent !important;
-        }
-
-        /* Hide default Streamlit page icons */
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"] svg {
-            display: none !important;
-        }
-
-        /* Hover Navigation Button */
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]:hover {
-            background-color: rgba(255, 255, 255, 0.05) !important;
-            color: #ffffff !important;
-            transform: none !important;
-        }
-
-        /* Active Navigation Button */
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][aria-current="page"] {
-            background-color: rgba(255, 255, 255, 0.1) !important;
-            color: #ffffff !important;
-            border-left: 3px solid #3282B8 !important;
-            font-weight: 600 !important;
-            box-shadow: none !important;
-        }
-
-        /* Custom Icons using pseudo-elements with Material Symbols Outlined */
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"]::before {
-            font-family: 'Material Symbols Outlined' !important;
-            display: inline-block !important;
-            font-size: 1.25rem !important;
-            margin-right: 0.65rem !important;
-            line-height: 1 !important;
-            vertical-align: middle !important;
-            -webkit-font-smoothing: antialiased;
-        }
-
-        /* Page-specific sidebar icons */
-        section[data-testid="stSidebar"] ul li:first-child a[data-testid="stSidebarNavLink"]::before,
-        section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li:first-child a::before {
-            content: "grid_view" !important;
-        }
-        section[data-testid="stSidebar"] ul li:first-child a[data-testid="stSidebarNavLink"] span,
-        section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li:first-child a span {
-            display: none !important;
-        }
-        section[data-testid="stSidebar"] ul li:first-child a[data-testid="stSidebarNavLink"]::after,
-        section[data-testid="stSidebar"] [data-testid="stSidebarNavItems"] li:first-child a::after {
-            content: "Dashboard" !important;
-            font-weight: inherit !important;
-            display: inline-block !important;
-        }
-
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Single"]::before {
-            content: "stethoscope" !important;
-        }
-
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Batch"]::before {
-            content: "folder" !important;
-        }
-
-        section[data-testid="stSidebar"] a[data-testid="stSidebarNavLink"][href*="Clinical"]::before {
-            content: "menu_book" !important;
-        }
-
-        /* Ensure sidebar toggle expand button is always visible, high-contrast, and clickable */
+        /* Ensure sidebar toggle expand button is always visible, high-contrast, and clickable as a hamburger menu */
         button[data-testid="collapsedSidebarMenu"] {
             display: flex !important;
             visibility: visible !important;
@@ -448,9 +442,26 @@ def _get_global_css():
             background-color: #0F4C75 !important;
             color: #FFFFFF !important;
             border-radius: 8px !important;
-            padding: 4px !important;
+            padding: 0 !important;
             box-shadow: 0 2px 8px rgba(15, 76, 117, 0.2) !important;
             margin-left: 10px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            height: 38px !important;
+            width: 38px !important;
+        }
+
+        button[data-testid="collapsedSidebarMenu"] svg {
+            display: none !important;
+        }
+
+        button[data-testid="collapsedSidebarMenu"]::before {
+            content: "" !important;
+            display: block !important;
+            width: 18px !important;
+            height: 2px !important;
+            background-color: #FFFFFF !important;
+            box-shadow: 0 -5px 0 0 #FFFFFF, 0 5px 0 0 #FFFFFF !important;
         }
 
         /* ================================================================
@@ -741,6 +752,74 @@ def _get_global_css():
         }
 
         /* ================================================================
+           RESPONSIVE SIDEBAR STYLING
+           ================================================================ */
+        /* Mobile devices - Make sidebar collapsible and show hamburger */
+        @media (max-width: 768px) {
+            /* Sidebar styling when collapsed on mobile */
+            section[data-testid="stSidebar"][aria-expanded="false"] {
+                width: 0 !important;
+                min-width: 0 !important;
+            }
+            
+            /* Collapsed sidebar button styling */
+            button[kind="header"][data-testid="baseButton-header"] {
+                background-color: #0F4C75 !important;
+                color: #FFFFFF !important;
+                border-radius: 8px !important;
+                padding: 0.5rem 0.75rem !important;
+                box-shadow: 0 2px 8px rgba(15, 76, 117, 0.3) !important;
+                margin: 1rem !important;
+            }
+            
+            /* Main content adjustment for mobile */
+            .stMainBlockContainer {
+                padding: 1.5rem 1rem !important;
+            }
+            
+            /* Make metric cards stack on mobile */
+            .metric-grid-custom {
+                grid-template-columns: 1fr !important;
+            }
+            
+            /* Adjust logo size on mobile */
+            .custom-logo-img {
+                height: 50px !important;
+                width: 50px !important;
+            }
+            
+            .custom-logo-text {
+                font-size: 1.25rem !important;
+            }
+            
+            .custom-logo-subtitle {
+                font-size: 0.75rem !important;
+            }
+        }
+        
+        /* Tablet and small desktop */
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .stMainBlockContainer {
+                padding: 2rem 1.5rem !important;
+            }
+            
+            .metric-grid-custom {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            section[data-testid="stSidebar"] {
+                width: 280px !important;
+            }
+        }
+        
+        /* Large desktop */
+        @media (min-width: 1025px) {
+            .stMainBlockContainer {
+                padding: 3rem 4rem !important;
+            }
+        }
+
+        /* ================================================================
            UNIFIED SECTION TITLE
            ================================================================ */
         .section-title-custom {
@@ -808,13 +887,107 @@ def _get_global_css():
     </style>
     """
 
+def _get_logo_html():
+    """Return the custom sidebar logo and navigation HTML."""
+    import os
+    import base64
+    
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    logo_path = os.path.join(base_dir, "assets", "logo.png")
+    
+    logo_img = ""
+    if os.path.exists(logo_path):
+        try:
+            with open(logo_path, "rb") as img_file:
+                b64_logo = base64.b64encode(img_file.read()).decode()
+            logo_img = f'<img src="data:image/png;base64,{b64_logo}" class="sidebar-logo-img" />'
+        except Exception:
+            logo_img = '<div class="sidebar-logo-img" style="display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🫁</div>'
+    else:
+        logo_img = '<div class="sidebar-logo-img" style="display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">🫁</div>'
+    
+    return f"""
+    <div class="sidebar-logo-header">
+        {logo_img}
+    </div>
+    
+    <div class="sidebar-nav-menu">
+        <a href="/" class="sidebar-nav-item" id="nav-dashboard">
+            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+            <span>Dashboard</span>
+        </a>
+        
+        <a href="/Single_Prediction" class="sidebar-nav-item" id="nav-single">
+            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span>Single Prediction</span>
+        </a>
+        
+        <a href="/Batch_Prediction" class="sidebar-nav-item" id="nav-batch">
+            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            </svg>
+            <span>Batch Prediction</span>
+        </a>
+        
+        <a href="/Clinical_Decision_Guide" class="sidebar-nav-item" id="nav-clinical">
+            <svg class="sidebar-nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            <span>Clinical Guide</span>
+        </a>
+        
+        <div class="sidebar-footer">
+            <span class="sidebar-version">v{APP_VERSION}</span>
+            <div class="sidebar-status-dot"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Set active navigation based on current page
+        const currentPath = window.location.pathname;
+        const navItems = document.querySelectorAll('.sidebar-nav-item');
+        
+        navItems.forEach(item => {{
+            const href = item.getAttribute('href');
+            if ((currentPath === '/' && href === '/') || 
+                (currentPath.includes('Single_Prediction') && href.includes('Single')) ||
+                (currentPath.includes('Batch_Prediction') && href.includes('Batch')) ||
+                (currentPath.includes('Clinical_Decision_Guide') && href.includes('Clinical'))) {{
+                item.classList.add('active');
+            }}
+        }});
+    </script>
+    """
+
 
 def _get_sidebar_html():
     """Return the sidebar branding HTML."""
+    import os
+    import base64
+    logo_path = os.path.join("assets", "logo.png")
+    if os.path.exists(logo_path):
+        try:
+            with open(logo_path, "rb") as img_file:
+                b64_logo = base64.b64encode(img_file.read()).decode()
+            # If they provided a large logo, maybe don't want the title text next to it if it already contains the text.
+            # But let's keep the title or adjust the height.
+            logo_html = f'<img src="data:image/png;base64,{b64_logo}" style="max-width: 100%; max-height: 50px; border-radius: 8px;"/>'
+        except Exception:
+            logo_html = '<div style="font-size: 1.8rem; line-height: 1;">🫁</div>'
+    else:
+        logo_html = '<div style="font-size: 1.8rem; line-height: 1;">🫁</div>'
+
     return f"""
     <div style="text-align: left; padding: 1.5rem 1rem 0.5rem 1rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.25rem;">
-            <div style="font-size: 1.8rem; line-height: 1;">🫁</div>
+            {logo_html}
             <h2 style="
                 margin: 0;
                 font-size: 1.25rem;
@@ -846,35 +1019,12 @@ def _get_sidebar_html():
 
 def _get_sidebar_info_html():
     """Return the sidebar info card HTML."""
-    return """
-    <div style="
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border-radius: 8px;
-        border-left: 3px solid #3282B8;
-        margin: 0.5rem 1rem;
-    ">
-        <p style="
-            margin: 0;
-            font-size: 0.72rem;
-            color: #E2F0F9 !important;
-            line-height: 1.4;
-        ">
-            Clinical Decision Support System for Pediatric Oxygen Therapy.
-        </p>
-    </div>
-    """
+    return ""
 
 
 def _get_sidebar_nav_label():
     """Return sidebar navigation section label."""
-    return """
-    <div style="padding: 0 1rem; margin-top: 0.75rem;">
-        <p style="font-size: 0.65rem; color: #E2F0F9 !important; opacity: 0.7; margin-bottom: 0.4rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
-            Menu
-        </p>
-    </div>
-    """
+    return ""
 
 
 def _get_sidebar_footer_html():
@@ -908,25 +1058,24 @@ def _get_sidebar_footer_html():
     """
 
 
+def st_html(html_str):
+    """Render HTML safely, cleaning up leading indentation to prevent markdown parsing issues."""
+    import streamlit as st
+    cleaned_lines = [line.lstrip() for line in html_str.splitlines()]
+    cleaned_html = "\n".join(cleaned_lines)
+    st.markdown(cleaned_html, unsafe_allow_html=True)
+
+
 def setup_page(page_title: str):
     """Set up page with unified CSS, sidebar branding, and consistent design system."""
     import streamlit as st
 
     # 1. Global CSS
-    st.markdown(_get_global_css(), unsafe_allow_html=True)
+    st_html(_get_global_css())
 
-    # 2. Sidebar Branding
+    # 2. Custom Sidebar with Logo and Navigation
     with st.sidebar:
-        st.markdown(_get_sidebar_html(), unsafe_allow_html=True)
-        st.markdown("---")
-        st.markdown(_get_sidebar_info_html(), unsafe_allow_html=True)
-        st.markdown("")
-        st.markdown(_get_sidebar_nav_label(), unsafe_allow_html=True)
-
-        # Add spacer and footer at the bottom of sidebar
-        st.markdown("")
-        st.markdown("")
-        st.markdown(_get_sidebar_footer_html(), unsafe_allow_html=True)
+        st_html(_get_logo_html())
 
 
 # =============================================================================
@@ -1111,7 +1260,7 @@ def render_status_card(icon: str, title: str, message: str, border_color: str, b
 def show_error_card(title: str, message: str, retry_button: bool = False):
     """Display a professional error card to the user."""
     card_html = render_status_card("❌", title, message, "#EF4444", "#FEF2F2", "#B91C1C")
-    st.markdown(card_html, unsafe_allow_html=True)
+    st_html(card_html)
     if retry_button:
         if st.button("🔄 Coba Lagi (Retry)"):
             st.rerun()
@@ -1120,16 +1269,16 @@ def show_error_card(title: str, message: str, retry_button: bool = False):
 def show_warning_card(title: str, message: str):
     """Display a professional warning card to the user."""
     card_html = render_status_card("⚠️", title, message, "#F59E0B", "#FFFBEB", "#B45309")
-    st.markdown(card_html, unsafe_allow_html=True)
+    st_html(card_html)
 
 
 def show_success_card(title: str, message: str):
     """Display a professional success card to the user."""
     card_html = render_status_card("✅", title, message, "#22C55E", "#ECFDF5", "#15803D")
-    st.markdown(card_html, unsafe_allow_html=True)
+    st_html(card_html)
 
 
 def show_info_card(title: str, message: str):
     """Display a professional info card to the user."""
     card_html = render_status_card("ℹ️", title, message, "#3282B8", "#EFF6FF", "#1D4ED8")
-    st.markdown(card_html, unsafe_allow_html=True)
+    st_html(card_html)

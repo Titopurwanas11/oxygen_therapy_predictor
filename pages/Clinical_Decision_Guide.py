@@ -10,7 +10,7 @@ from utils.config import (
     render_footer,
 )
 
-st.set_page_config(page_title="Clinical Decision Guide — OxyPredict", page_icon="📘", layout="wide")
+st.set_page_config(page_title="Clinical Decision Guide — OxyPredict", page_icon="assets/favicon-64x64.png", layout="wide")
 setup_page("Clinical Decision Guide — OxyPredict")
 
 # Helper function to render HTML safely

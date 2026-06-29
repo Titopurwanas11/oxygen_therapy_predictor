@@ -27,7 +27,7 @@ from utils.session_analytics import (
 )
 
 
-st.set_page_config(page_title="Batch Analysis — OxyPredict", page_icon="🫁", layout="wide")
+st.set_page_config(page_title="Batch Analysis — OxyPredict", page_icon="assets/favicon-64x64.png", layout="wide")
 setup_page("Batch Analysis — OxyPredict")
 init_analytics_state()
 
