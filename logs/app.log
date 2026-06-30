@@ -22,3 +22,25 @@ Traceback (most recent call last):
     with col_res_left:
          ^^^^^^^^^^^^
 NameError: name 'col_res_left' is not defined
+2026-06-30 21:08:57,053 - OxyPredict - ERROR - Failed to load model from path C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\project\oxygen_therapy_predictor\model\best_random_forest.pkl: Can't get attribute '_RemainderColsList' on <module 'sklearn.compose._column_transformer' from 'C:\\Users\\titop\\OneDrive\\Dokumen\\Kuliah\\Semester 7\\Skripsi\\Project\\project\\oxygen_therapy_predictor\\.venv\\Lib\\site-packages\\sklearn\\compose\\_column_transformer.py'>
+Traceback (most recent call last):
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\project\oxygen_therapy_predictor\utils\prediction.py", line 24, in load_model
+    model = joblib.load(MODEL_PATH)
+            ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\project\oxygen_therapy_predictor\.venv\Lib\site-packages\joblib\numpy_pickle.py", line 749, in load
+    obj = _unpickle(
+          ^^^^^^^^^^
+  File "C:\Users\titop\OneDrive\Dokumen\Kuliah\Semester 7\Skripsi\Project\project\oxygen_therapy_predictor\.venv\Lib\site-packages\joblib\numpy_pickle.py", line 626, in _unpickle
+    obj = unpickler.load()
+          ^^^^^^^^^^^^^^^^
+  File "C:\Users\titop\AppData\Local\Programs\Python\Python312\Lib\pickle.py", line 1255, in load
+    dispatch[key[0]](self)
+  File "C:\Users\titop\AppData\Local\Programs\Python\Python312\Lib\pickle.py", line 1580, in load_stack_global
+    self.append(self.find_class(module, name))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\titop\AppData\Local\Programs\Python\Python312\Lib\pickle.py", line 1623, in find_class
+    return _getattribute(sys.modules[module], name)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\titop\AppData\Local\Programs\Python\Python312\Lib\pickle.py", line 326, in _getattribute
+    raise AttributeError("Can't get attribute {!r} on {!r}"
+AttributeError: Can't get attribute '_RemainderColsList' on <module 'sklearn.compose._column_transformer' from 'C:\\Users\\titop\\OneDrive\\Dokumen\\Kuliah\\Semester 7\\Skripsi\\Project\\project\\oxygen_therapy_predictor\\.venv\\Lib\\site-packages\\sklearn\\compose\\_column_transformer.py'>
