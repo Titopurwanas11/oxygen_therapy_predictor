@@ -7,8 +7,9 @@ import streamlit as st
 import pandas as pd
 import io
 import datetime
+import time
 
-from utils.config import ALL_FEATURES, setup_page, render_page_header, render_section_divider, render_footer, render_empty_state
+from utils.config import ALL_FEATURES, setup_page, render_page_header, render_section_divider, render_footer, render_empty_state, render_progress_spinner
 from utils.batch_prediction import validate_uploaded_file, run_batch_prediction
 from utils.statistics import calculate_population_stats, generate_population_narrative
 from utils.charts import (
@@ -234,51 +235,80 @@ if uploaded_file is not None:
         # ─── SECTION 3: JALANKAN PREDIKSI ────────────────────────────────────
         st_html("<h3 class=\"section-title-custom\">Proses Prediksi Massal</h3>")
         
-        col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
+        col_btn_l, col_btn_c, col_btn_r = st.columns([1, 1, 1])
         with col_btn_c:
             predict_all = st.button(
                 "Mulai Prediksi Semua Pasien",
-                use_container_width=True,
+                use_container_width=False,
                 type="primary"
             )
 
         if predict_all or st.session_state.get("batch_predicted", False):
             # Maintain state so prediction results don't vanish on UI interaction
             if predict_all or "batch_results" not in st.session_state:
-                with st.spinner("Memproses Model Prediksi Klinis..."):
+                progress_view = st.empty()
+                start_time = time.time()
+
+                def update_spinner(progress, elapsed=None):
+                    if elapsed is None:
+                        elapsed = int(time.time() - start_time)
+                    progress_view.markdown(
+                        render_progress_spinner(progress, elapsed),
+                        unsafe_allow_html=True
+                    )
+
+                update_spinner(15)
+                time.sleep(0.16)
+
+                try:
+                    from utils.prediction import ModelLoadError
+
+                    update_spinner(35)
+                    time.sleep(0.14)
+
+                    result_df = run_batch_prediction(df_raw)
+                    track_batch_prediction()
+
+                    update_spinner(60)
+                    time.sleep(0.16)
+
                     try:
-                        from utils.prediction import ModelLoadError
-                        result_df = run_batch_prediction(df_raw)
-                        track_batch_prediction()
-                        try:
-                            from utils.monitoring import record_predictions_from_df
-                            record_predictions_from_df(result_df, type="Batch")
-                        except Exception:
-                            pass
-                        # Save in session state
-                        st.session_state.batch_results = result_df
-                        st.session_state.batch_predicted = True
-                        
-                        from utils.config import show_success_card
-                        show_success_card(
-                            "Prediksi Massal Berhasil Dilakukan",
-                            f"Berhasil memproses analisis klinis untuk {len(result_df)} pasien."
-                        )
-                    except ModelLoadError:
-                        from utils.config import show_error_card
-                        show_error_card(
-                            "Model Prediksi Tidak Dapat Dimuat",
-                            "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
-                        )
-                        st.stop()
-                    except Exception as pred_err:
-                        from utils.config import logger, show_error_card
-                        logger.error("Batch prediction failed: %s", str(pred_err), exc_info=True)
-                        show_error_card(
-                            "Prediksi Gagal Diproses",
-                            "Sistem tidak dapat melakukan prediksi karena terjadi gangguan internal. Silakan hubungi administrator sistem."
-                        )
-                        st.stop()
+                        from utils.monitoring import record_predictions_from_df
+                        record_predictions_from_df(result_df, type="Batch")
+                    except Exception:
+                        pass
+
+                    update_spinner(80)
+                    time.sleep(0.14)
+
+                    # Save in session state
+                    st.session_state.batch_results = result_df
+                    st.session_state.batch_predicted = True
+
+                    update_spinner(100)
+                    time.sleep(0.2)
+                    progress_view.empty()
+
+                    from utils.config import show_success_card
+                    show_success_card(
+                        "Prediksi Massal Berhasil Dilakukan",
+                        f"Berhasil memproses analisis klinis untuk {len(result_df)} pasien."
+                    )
+                except ModelLoadError:
+                    from utils.config import show_error_card
+                    show_error_card(
+                        "Model Prediksi Tidak Dapat Dimuat",
+                        "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+                    )
+                    st.stop()
+                except Exception as pred_err:
+                    from utils.config import logger, show_error_card
+                    logger.error("Batch prediction failed: %s", str(pred_err), exc_info=True)
+                    show_error_card(
+                        "Prediksi Gagal Diproses",
+                        "Sistem tidak dapat melakukan prediksi karena terjadi gangguan internal. Silakan hubungi administrator sistem."
+                    )
+                    st.stop()
 
             # Retrieve results
             result_df = st.session_state.batch_results

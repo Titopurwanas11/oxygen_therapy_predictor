@@ -10,6 +10,7 @@ import numpy as np
 import datetime
 import io
 import base64
+import time
 from utils.config import (
     FEATURE_GROUPS,
     NUMERICAL_FEATURES,
@@ -21,6 +22,7 @@ from utils.config import (
     render_page_header,
     render_section_divider,
     render_footer,
+    render_progress_spinner,
 )
 from utils.prediction import predict_single, get_confidence_level, get_risk_level
 from utils.pdf_report import generate_pdf_report
@@ -337,10 +339,10 @@ with alerts_placeholder.container():
         st_html("</div>")
 
 # ─── Predict Button ─────────────────────────────────────────────────────────
-col_btn_l, col_btn_c, col_btn_r = st.columns([1, 2, 1])
+col_btn_l, col_btn_c, col_btn_r = st.columns([1, 1, 1])
 with col_btn_c:
     predict_clicked = st.button(
-        "🔮  Jalankan Prediksi Klinis",
+        "Prediksi Klinis",
         use_container_width=True,
         type="primary"
     )
@@ -375,167 +377,180 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             show_warning_card("Data Input Pasien Tidak Valid", val_err)
             st.stop()
 
-        with st.spinner("Memproses Prediksi Klinis..."):
+        progress_view = st.empty()
+        start_time = time.time()
+
+        def update_spinner(progress, elapsed=None):
+            if elapsed is None:
+                elapsed = int(time.time() - start_time)
+            progress_view.markdown(
+                render_progress_spinner(progress, elapsed),
+                unsafe_allow_html=True
+            )
+
+        update_spinner(10)
+        time.sleep(0.18)
+
+        try:
+            from utils.prediction import ModelLoadError, predict_single
+
+            update_spinner(25)
+            time.sleep(0.14)
+
+            label, prob_yes = predict_single(patient_data)
+            track_single_prediction()
+            prob_yes_pct = prob_yes * 100
+
+            update_spinner(45)
+            time.sleep(0.14)
+
+            # Confidence Interpretation calculation
+            if label == "Yes":
+                prob_pct = prob_yes * 100
+            else:
+                prob_pct = (1 - prob_yes) * 100
+
+            if prob_pct > 85:
+                confidence_level = "High Confidence"
+                confidence_label = "High"
+            elif 70 <= prob_pct <= 85:
+                confidence_level = "Moderate Confidence"
+                confidence_label = "Moderate"
+            else:
+                confidence_level = "Low Confidence"
+                confidence_label = "Low"
+
+            # Clinical Risk Badge calculation
+            if prob_yes_pct >= 85:
+                risk_level = "Risiko Tinggi"
+                risk_badge = "🔴 Risiko Tinggi"
+                risk_color = "#EF4444"
+                risk_color_rgb = (239, 68, 68)
+                risk_bg = "#FEF2F2"
+                risk_border = "#FCA5A5"
+            elif 60 <= prob_yes_pct < 85:
+                risk_level = "Risiko Sedang"
+                risk_badge = "🟠 Risiko Sedang"
+                risk_color = "#F59E0B"
+                risk_color_rgb = (245, 158, 11)
+                risk_bg = "#FFFBEB"
+                risk_border = "#FCD34D"
+            else:
+                risk_level = "Risiko Rendah"
+                risk_badge = "🟢 Risiko Rendah"
+                risk_color = "#22C55E"
+                risk_color_rgb = (34, 197, 94)
+                risk_bg = "#ECFDF5"
+                risk_border = "#A7F3D0"
+
+            update_spinner(65)
+            time.sleep(0.16)
+
             try:
-                from utils.prediction import ModelLoadError, predict_single
-                label, prob_yes = predict_single(patient_data)
-                track_single_prediction()
-                prob_yes_pct = prob_yes * 100
-                
-                # Confidence Interpretation calculation
-                if label == "Yes":
-                    prob_pct = prob_yes * 100
-                else:
-                    prob_pct = (1 - prob_yes) * 100
-                    
-                if prob_pct > 85:
-                    confidence_level = "High Confidence"
-                    confidence_label = "High"
-                elif 70 <= prob_pct <= 85:
-                    confidence_level = "Moderate Confidence"
-                    confidence_label = "Moderate"
-                else:
-                    confidence_level = "Low Confidence"
-                    confidence_label = "Low"
+                shap_result = compute_shap_for_patient(patient_data)
+                shap_values_list = shap_result["shap_values"]
+                shap_base = shap_result["base_value"]
+                shap_prob = shap_result["predicted_prob"]
+                shap_ok = True
 
-                # Clinical Risk Badge calculation
-                if prob_yes_pct >= 85:
-                    risk_level = "Risiko Tinggi"
-                    risk_badge = "🔴 Risiko Tinggi"
-                    risk_color = "#EF4444"
-                    risk_color_rgb = (239, 68, 68)
-                    risk_bg = "#FEF2F2"
-                    risk_border = "#FCA5A5"
-                elif 60 <= prob_yes_pct < 85:
-                    risk_level = "Risiko Sedang"
-                    risk_badge = "🟠 Risiko Sedang"
-                    risk_color = "#F59E0B"
-                    risk_color_rgb = (245, 158, 11)
-                    risk_bg = "#FFFBEB"
-                    risk_border = "#FCD34D"
-                else:
-                    risk_level = "Risiko Rendah"
-                    risk_badge = "🟢 Risiko Rendah"
-                    risk_color = "#22C55E"
-                    risk_color_rgb = (34, 197, 94)
-                    risk_bg = "#ECFDF5"
-                    risk_border = "#A7F3D0"
+                top_10 = shap_values_list[:10]
+                positive_factors = [s for s in shap_values_list if s["shap_value"] > 0.005]
+                negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
 
-                # Save to prediction history file
-                try:
-                    from utils.monitoring import record_prediction
-                    conf_pct = prob_yes * 100 if label == "Yes" else (1.0 - prob_yes) * 100
-                    record_prediction(
-                        patient_data=patient_data,
-                        prediction=label,
-                        confidence=conf_pct,
-                        risk_level=risk_level,
-                        type="Single"
-                    )
-                except Exception:
-                    pass
-
-                # Compute SHAP and AI Clinical Summary narrative upfront
+                pred_val = 1 if label == "Yes" else 0
+                narrative_text = generate_ai_clinical_summary(
+                    prediction=pred_val,
+                    probability=shap_prob,
+                    shap_values=shap_values_list,
+                    feature_names=ALL_FEATURES,
+                    feature_values=patient_data
+                )
+            except Exception as shap_err:
+                from utils.config import logger
+                logger.error("Could not compute SHAP values: %s", str(shap_err), exc_info=True)
                 shap_ok = False
                 shap_values_list = []
                 top_10 = []
                 positive_factors = []
                 negative_factors = []
                 narrative_text = "Clinical summary not available due to SHAP computation error."
-                
-                try:
-                    shap_result = compute_shap_for_patient(patient_data)
-                    shap_values_list = shap_result["shap_values"]
-                    shap_base = shap_result["base_value"]
-                    shap_prob = shap_result["predicted_prob"]
-                    shap_ok = True
-                    
-                    top_10 = shap_values_list[:10]
-                    positive_factors = [s for s in shap_values_list if s["shap_value"] > 0.005]
-                    negative_factors = [s for s in shap_values_list if s["shap_value"] < -0.005]
 
-                    pred_val = 1 if label == "Yes" else 0
-                    narrative_text = generate_ai_clinical_summary(
-                        prediction=pred_val,
-                        probability=shap_prob,
-                        shap_values=shap_values_list,
-                        feature_names=ALL_FEATURES,
-                        feature_values=patient_data
-                    )
-                except Exception as shap_err:
-                    from utils.config import logger
-                    logger.error("Could not compute SHAP values: %s", str(shap_err), exc_info=True)
+            update_spinner(85)
+            time.sleep(0.14)
 
-                # Generate Clinical Recommendation
-                rec_dict = generate_recommendation(
+            # Generate Clinical Recommendation
+            rec_dict = generate_recommendation(
+                prediction=label,
+                probability=prob_yes,
+                risk_level=risk_level,
+                confidence_level=confidence_label,
+                patient_data=patient_data,
+                top_shap_features=top_10
+            )
+
+            # Generate professional PDF report using ReportLab
+            pdf_report_bytes = None
+            try:
+                pdf_report_bytes = generate_pdf_report(
+                    patient_data=patient_data,
                     prediction=label,
                     probability=prob_yes,
+                    confidence=confidence_label,
                     risk_level=risk_level,
-                    confidence_level=confidence_label,
-                    patient_data=patient_data,
-                    top_shap_features=top_10
+                    clinical_summary=narrative_text,
+                    top_shap_features=top_10,
+                    shap_values=shap_values_list,
+                    feature_names=ALL_FEATURES,
+                    recommendation=rec_dict
                 )
-
-                # Generate professional PDF report using ReportLab
+            except Exception as pdf_err:
+                from utils.config import logger
+                logger.error("Single PDF report generation failed: %s", str(pdf_err), exc_info=True)
                 pdf_report_bytes = None
-                try:
-                    pdf_report_bytes = generate_pdf_report(
-                        patient_data=patient_data,
-                        prediction=label,
-                        probability=prob_yes,
-                        confidence=confidence_label,
-                        risk_level=risk_level,
-                        clinical_summary=narrative_text,
-                        top_shap_features=top_10,
-                        shap_values=shap_values_list,
-                        feature_names=ALL_FEATURES,
-                        recommendation=rec_dict
-                    )
-                except Exception as pdf_err:
-                    from utils.config import logger
-                    logger.error("Single PDF report generation failed: %s", str(pdf_err), exc_info=True)
-                    pdf_report_bytes = None
 
-                # Store in session state
-                st.session_state.single_prediction_result = {
-                    "label": label,
-                    "prob_yes": prob_yes,
-                    "prob_yes_pct": prob_yes_pct,
-                    "prob_pct": prob_pct,
-                    "confidence_level": confidence_level,
-                    "confidence_label": confidence_label,
-                    "risk_level": risk_level,
-                    "risk_badge": risk_badge,
-                    "risk_color": risk_color,
-                    "risk_color_rgb": risk_color_rgb,
-                    "risk_bg": risk_bg,
-                    "risk_border": risk_border,
-                    "shap_ok": shap_ok,
-                    "shap_values_list": shap_values_list,
-                    "top_10": top_10,
-                    "positive_factors": positive_factors,
-                    "negative_factors": negative_factors,
-                    "narrative_text": narrative_text,
-                    "rec_dict": rec_dict,
-                    "pdf_report_bytes": pdf_report_bytes,
-                }
-                st.session_state.single_predicted = True
+            update_spinner(100)
+            time.sleep(0.25)
+            progress_view.empty()
 
-            except ModelLoadError:
-                from utils.config import show_error_card
-                show_error_card(
-                    "Model Prediksi Tidak Dapat Dimuat",
-                    "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
-                )
-                st.stop()
-            except Exception as e:
-                from utils.config import logger, show_error_card
-                logger.error("Single prediction failed: %s", str(e), exc_info=True)
-                show_error_card(
-                    "Prediksi Gagal Diproses",
-                    "Sistem tidak dapat melakukan prediksi. Periksa kembali data pasien kemudian coba kembali."
-                )
-                st.stop()
+            # Store in session state
+            st.session_state.single_prediction_result = {
+                "label": label,
+                "prob_yes": prob_yes,
+                "prob_yes_pct": prob_yes_pct,
+                "prob_pct": prob_pct,
+                "confidence_level": confidence_level,
+                "confidence_label": confidence_label,
+                "risk_level": risk_level,
+                "risk_badge": risk_badge,
+                "risk_color": risk_color,
+                "risk_color_rgb": risk_color_rgb,
+                "risk_bg": risk_bg,
+                "risk_border": risk_border,
+                "shap_ok": shap_ok,
+                "shap_values_list": shap_values_list,
+                "top_10": top_10,
+                "positive_factors": positive_factors,
+                "negative_factors": negative_factors,
+                "narrative_text": narrative_text,
+                "rec_dict": rec_dict,
+                "pdf_report_bytes": pdf_report_bytes,
+            }
+            st.session_state.single_predicted = True
+        except ModelLoadError:
+            from utils.config import show_error_card
+            show_error_card(
+                "Model Prediksi Tidak Dapat Dimuat",
+                "Kemungkinan penyebab:<br>• Berkas model tidak ditemukan.<br>• Model tidak kompatibel.<br>• Versi model tidak sesuai.<br><br>Silakan hubungi administrator sistem."
+            )
+            st.stop()
+        except Exception as e:
+            from utils.config import logger, show_error_card
+            logger.error("Single prediction failed: %s", str(e), exc_info=True)
+            show_error_card(
+                "Prediksi Gagal Diproses",
+                "Sistem tidak dapat melakukan prediksi. Periksa kembali data pasien kemudian coba kembali."
+            )
+            st.stop()
 
         try:
             res = st.session_state.single_prediction_result
@@ -635,16 +650,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 </div>
                 """)
 
-                # Download Link for PDF Report (uses HTML link to avoid page rerun refresh)
-                if pdf_report_bytes:
-                    report_filename = f"OxyPredict_Laporan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                    pdf_link = get_pdf_download_link(pdf_report_bytes, report_filename)
-                    st.markdown(pdf_link, unsafe_allow_html=True)
-                else:
-                    st.warning("Laporan PDF tidak dapat dibuat saat ini.")
-                    
             with col_res_right:
-                # Gauge Chart rendering
                 st_html("""
                 <div class="cdss-card" style="
                     display: flex;
@@ -661,6 +667,7 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                         mode="gauge+number",
                         value=prob_yes_pct,
                         domain={'x': [0, 1], 'y': [0, 1]},
+
                         gauge={
                             'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#0F4C75"},
                             'bar': {'color': risk_color},
@@ -1103,6 +1110,21 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 </p>
             </div>
             """)
+
+            if pdf_report_bytes:
+                report_filename = f"OxyPredict_Laporan_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+                dl_left, dl_center, dl_right = st.columns([1, 1, 1])
+                with dl_center:
+                    st.download_button(
+                        label="Unduh Laporan Klinis (PDF)",
+                        data=pdf_report_bytes,
+                        file_name=report_filename,
+                        mime="application/pdf",
+                        use_container_width=True,
+                        on_click=track_pdf_report_generated,
+                    )
+            else:
+                st.markdown("<div style='display:flex; justify-content:center; margin-top:1.5rem; color:#475569;'>Laporan PDF tidak tersedia.</div>", unsafe_allow_html=True)
 
         except ModelLoadError:
             show_error_card(

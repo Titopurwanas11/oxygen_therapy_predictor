@@ -251,7 +251,7 @@ else:
                 data=excel_buffer,
                 file_name=f"OxyPredict_Log_Prediksi_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                use_container_width=True,
+                use_container_width=False,
             )
 
         st_html("</div>")

@@ -4,6 +4,7 @@ Contains feature definitions, model information, application constants,
 and the unified design system.
 """
 
+import datetime
 import os
 
 # =============================================================================
@@ -504,12 +505,17 @@ def _get_global_css():
             background-image: none !important;
             color: #3282B8 !important;
             border: 1px solid #D6E4F0 !important;
-            border-radius: 12px !important;
-            padding: 0.65rem 1.75rem !important;
-            font-weight: 600 !important;
-            font-size: 15px !important;
-            transition: all 0.2s ease-in-out !important;
-            box-shadow: none !important;
+            border-radius: 16px !important;
+            padding: 0.75rem 1.4rem !important;
+            min-height: 42px !important;
+            line-height: 1.2 !important;
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            letter-spacing: 0.01em !important;
+            transition: all 0.18s ease-in-out !important;
+            box-shadow: 0 3px 10px rgba(15, 76, 117, 0.08) !important;
+            display: block !important;
+            margin: 0 auto !important;
         }
         .stButton > button:hover {
             background-color: #F8FAFC !important;
@@ -524,13 +530,13 @@ def _get_global_css():
             background: linear-gradient(135deg, #0F4C75 0%, #3282B8 100%) !important;
             color: #FFFFFF !important;
             border: 1px solid #0F4C75 !important;
-            box-shadow: 0 2px 4px rgba(15, 76, 117, 0.15) !important;
+            box-shadow: 0 6px 14px rgba(15, 76, 117, 0.14) !important;
         }
         .stButton > button[data-testid="stBaseButton-primary"]:hover {
             background: linear-gradient(135deg, #145E90 0%, #3E91C9 100%) !important;
             border-color: #145E90 !important;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 12px rgba(15, 76, 117, 0.25) !important;
+            box-shadow: 0 8px 24px rgba(15, 76, 117, 0.24) !important;
         }
 
         /* Download Button (Clinical Teal Accent Style) */
@@ -538,19 +544,22 @@ def _get_global_css():
             background: linear-gradient(135deg, #14B8A6 0%, #0D9488 100%) !important;
             color: #FFFFFF !important;
             border: 1px solid #14B8A6 !important;
-            border-radius: 12px !important;
-            padding: 0.65rem 1.75rem !important;
-            font-weight: 600 !important;
-            font-size: 15px !important;
-            transition: all 0.2s ease-in-out !important;
-            box-shadow: 0 2px 4px rgba(20, 184, 166, 0.15) !important;
+            border-radius: 16px !important;
+            padding: 0.75rem 1.4rem !important;
+            min-height: 42px !important;
+            line-height: 1.2 !important;
+            font-weight: 700 !important;
+            font-size: 14px !important;
+            letter-spacing: 0.01em !important;
+            transition: all 0.18s ease-in-out !important;
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.14) !important;
         }
         .stDownloadButton > button:hover {
             background: linear-gradient(135deg, #0D9488 0%, #0F766E 100%) !important;
             border-color: #0F766E !important;
             color: #FFFFFF !important;
             transform: translateY(-1px) !important;
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.25) !important;
+            box-shadow: 0 8px 24px rgba(20, 184, 166, 0.22) !important;
         }
 
         .stButton > button:disabled {
@@ -884,6 +893,115 @@ def _get_global_css():
             color: #3282B8 !important;
             border-color: #BFDBFE !important;
         }
+
+        .page-loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 76, 117, 0.82);
+            backdrop-filter: blur(4px);
+            z-index: 2000 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .page-loading-card {
+            width: min(560px, 100%);
+            background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.55);
+            box-shadow: 0 32px 80px rgba(15, 76, 117, 0.18);
+            padding: 2rem;
+            color: #0F172A;
+            text-align: center;
+        }
+
+        .progress-spinner-container {
+            width: min(260px, 100%);
+            margin: 0 auto;
+            padding: 1rem 0 0;
+            text-align: center;
+        }
+
+        .progress-spinner-ring {
+            width: 96px;
+            height: 96px;
+            border: 10px solid rgba(47, 85, 147, 0.18);
+            border-top-color: #3282B8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        .progress-spinner-ring {
+            width: 96px;
+            height: 96px;
+            border: 10px solid rgba(47, 85, 147, 0.18);
+            border-top-color: #3282B8;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1.1rem;
+        }
+
+        .progress-spinner-percent {
+            margin: 0.75rem 0 0;
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: #0F4C75;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .page-loading-card h3 {
+            margin: 0 0 0.75rem 0;
+            font-size: 1.7rem;
+            color: #0F4C75;
+            letter-spacing: -0.4px;
+        }
+
+        .page-loading-card p {
+            margin: 0 0 1.5rem 0;
+            color: #475569;
+            font-size: 0.95rem;
+            line-height: 1.75;
+        }
+
+        .page-loading-progress {
+            height: 14px;
+            width: 100%;
+            border-radius: 999px;
+            background: #E2E8F0;
+            overflow: hidden;
+            margin-bottom: 0.85rem;
+            border: 1px solid rgba(15, 76, 117, 0.12);
+        }
+
+        .page-loading-progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #0F4C75 0%, #3282B8 100%);
+            transition: width 0.25s ease;
+        }
+
+        .page-loading-percent {
+            margin: 0;
+            color: #0F4C75;
+            font-weight: 700;
+            letter-spacing: 0.2px;
+        }
+
+        section[data-testid="stSidebar"] {
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 1100 !important;
+        }
+
+        section[data-testid="stMain"] {
+            transition: opacity 0.25s ease-in-out;
+        }
     </style>
     """
 
@@ -1193,22 +1311,23 @@ def render_footer() -> str:
     return f"""
 <div style="
     text-align: center;
-    padding: 2.5rem 0 1.5rem 0;
-    margin-top: 3.5rem;
+    padding: 2rem 0 1.25rem 0;
+    margin-top: 3rem;
     border-top: 1px solid #D6E4F0;
 ">
-    <div style="
-        font-size: 16px;
+    <p style="
+        margin: 0;
+        font-size: 15px;
         font-weight: 700;
         color: #0F4C75;
-        margin-bottom: 0.3rem;
-    ">{APP_TITLE} v{APP_VERSION}</div>
-    <p style="margin: 0; color: #64748B; font-size: 13px; line-height: 1.6;">
-        Clinical Decision Support System for Oxygen Therapy Assessment
-    </p>
-    <p style="margin: 0.3rem 0 0 0; color: #8892B0; font-size: 13px;">
-        Developed for Academic Research & Clinical Reference
-    </p>
+        letter-spacing: 0.01em;
+    ">{APP_TITLE} v{APP_VERSION}</p>
+    <p style="
+        margin: 0.5rem 0 0 0;
+        color: #64748B;
+        font-size: 13px;
+        line-height: 1.6;
+    ">© {APP_DEVELOPER}. Clinical decision support.</p>
 </div>
 """
 
@@ -1248,6 +1367,55 @@ def render_empty_state(icon: str, title: str, description: str) -> str:
         margin-right: auto;
         line-height: 1.6;
     ">{description}</p>
+</div>
+"""
+
+
+def render_loading_card(title: str, subtitle: str, percent: int = 0) -> str:
+    """
+    Return HTML for a compact loading status card with progress indicator.
+    """
+    normalized_percent = max(0, min(100, percent))
+    return f"""
+<div class="page-loading-box" style="max-width: 100%; margin: 1rem auto 1.5rem auto;">
+    <div class="page-loading-title">{title}</div>
+    <div class="page-loading-subtitle">{subtitle}</div>
+    <div class="page-loading-bar">
+        <div class="page-loading-progress-bar" style="width: {normalized_percent}%;"></div>
+    </div>
+    <p class="page-loading-percent">{normalized_percent}% selesai</p>
+</div>
+"""
+
+
+def render_loading_overlay(title: str, subtitle: str, percent: int = 0) -> str:
+    """
+    Return HTML for a full-page overlay loading screen.
+    """
+    normalized_percent = max(0, min(100, percent))
+    return f"""
+<div class="page-loading-overlay">
+    <div class="page-loading-box" style="max-width: 520px; margin: 0 auto; box-shadow: 0 18px 38px rgba(15, 76, 117, 0.15);">
+        <div class="page-loading-title">{title}</div>
+        <div class="page-loading-subtitle">{subtitle}</div>
+        <div class="page-loading-bar">
+            <div class="page-loading-progress-bar" style="width: {normalized_percent}%;"></div>
+        </div>
+        <p class="page-loading-percent">{normalized_percent}% selesai</p>
+    </div>
+</div>
+"""
+
+
+def render_progress_spinner(percent: int, elapsed_seconds: int = 0) -> str:
+    """
+    Return HTML for a centered spinner with percent display beneath it.
+    """
+    normalized_percent = max(0, min(100, percent))
+    return f"""
+<div class="progress-spinner-container">
+    <div class="progress-spinner-ring"></div>
+    <p class="progress-spinner-percent">{normalized_percent}%</p>
 </div>
 """
 

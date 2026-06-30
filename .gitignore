@@ -4,6 +4,13 @@ env/
 .venv/
 .env
 
+# Python package/build artifacts
+pip-wheel-metadata/
+*.egg-info/
+build/
+dist/
+*.egg
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.pyc
