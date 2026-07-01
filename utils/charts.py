@@ -3,8 +3,27 @@ Plotly Chart Generation for OxyPredict Batch Prediction Dashboard.
 """
 
 import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
+from utils.config import logger
+
+
+# Lazy import Plotly so the module import doesn't fail at app startup when
+# Plotly is not available in the deployed environment. Chart functions will
+# raise a clear error only when invoked.
+try:
+    import plotly.express as px
+    import plotly.graph_objects as go
+except Exception as e:
+    px = None
+    go = None
+    logger.error("Plotly import failed: %s", str(e), exc_info=True)
+
+
+def _ensure_plotly():
+    if px is None or go is None:
+        raise ImportError(
+            "Plotly is not installed in the deployed environment. "
+            "Add 'plotly' to requirements.txt and redeploy to enable charts."
+        )
 
 
 def create_pie_chart(df: pd.DataFrame):
@@ -17,6 +36,8 @@ def create_pie_chart(df: pd.DataFrame):
         {"Status": "Butuh Oksigen" if status == "Yes" else "Tidak Butuh Oksigen", "Count": counts_dict.get(status, 0)}
         for status in status_order
     ])
+
+    _ensure_plotly()
 
     fig = px.pie(
         counts,
@@ -57,6 +78,8 @@ def create_risk_distribution_chart(df: pd.DataFrame):
         for rsk in risk_order
     ])
 
+    _ensure_plotly()
+
     fig = px.bar(
         risks,
         x="Tingkat Risiko",
@@ -81,6 +104,8 @@ def create_probability_histogram(df: pd.DataFrame):
     """
     Create a Histogram showing prediction probability frequency.
     """
+    _ensure_plotly()
+
     fig = px.histogram(
         df,
         x="Probability",
@@ -125,6 +150,8 @@ def create_avg_prob_per_risk_chart(df: pd.DataFrame):
         for rsk in risk_order
     ])
 
+    _ensure_plotly()
+
     fig = px.bar(
         avg_probs,
         x="Kelompok Risiko",
@@ -164,6 +191,8 @@ def create_confidence_histogram(df: pd.DataFrame):
         for lvl in levels_order
     ])
 
+    _ensure_plotly()
+
     fig = px.bar(
         counts,
         x="Tingkat Keyakinan",
@@ -194,6 +223,8 @@ def create_avg_confidence_gauge(avg_conf: float):
     """
     Create a Gauge Chart of the average confidence percentage.
     """
+    _ensure_plotly()
+
     fig = go.Figure(go.Indicator(
         mode="gauge+number",
         value=avg_conf,
@@ -230,6 +261,8 @@ def create_prediction_ratio_donut(df: pd.DataFrame):
         {"Status": "Butuh Oksigen" if status == "Yes" else "Tidak Butuh Oksigen", "Count": counts_dict.get(status, 0)}
         for status in status_order
     ])
+
+    _ensure_plotly()
 
     fig = px.pie(
         counts,
