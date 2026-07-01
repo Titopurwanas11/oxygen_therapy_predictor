@@ -7,41 +7,78 @@ import datetime
 from io import BytesIO
 import pandas as pd
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.colors import HexColor
-from reportlab.pdfgen import canvas
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-    KeepTogether,
-    HRFlowable,
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.graphics.shapes import Drawing
-from reportlab.graphics.charts.piecharts import Pie
-from reportlab.graphics.charts.barcharts import VerticalBarChart
+from utils.config import logger
 
 
-class NumberedCanvas(canvas.Canvas):
-    """Custom canvas that tracks pages to draw dynamic 'Page X of Y' footers."""
-    def __init__(self, *args, **kwargs):
-        super(NumberedCanvas, self).__init__(*args, **kwargs)
-        self._saved_page_states = []
+def _import_reportlab():
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.colors import HexColor
+        from reportlab.pdfgen import canvas
+        from reportlab.platypus import (
+            SimpleDocTemplate,
+            Paragraph,
+            Spacer,
+            Table,
+            TableStyle,
+            KeepTogether,
+            HRFlowable,
+        )
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.graphics.shapes import Drawing
+        from reportlab.graphics.charts.piecharts import Pie
+        from reportlab.graphics.charts.barcharts import VerticalBarChart
 
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        return {
+            "letter": letter,
+            "HexColor": HexColor,
+            "canvas": canvas,
+            "SimpleDocTemplate": SimpleDocTemplate,
+            "Paragraph": Paragraph,
+            "Spacer": Spacer,
+            "Table": Table,
+            "TableStyle": TableStyle,
+            "KeepTogether": KeepTogether,
+            "HRFlowable": HRFlowable,
+            "getSampleStyleSheet": getSampleStyleSheet,
+            "ParagraphStyle": ParagraphStyle,
+            "Drawing": Drawing,
+            "Pie": Pie,
+            "VerticalBarChart": VerticalBarChart,
+        }
+    except Exception as e:
+        logger.error("ReportLab import failed in batch_report: %s", str(e), exc_info=True)
+        return None
 
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_page_decorations(num_pages)
-            canvas.Canvas.showPage(self)
-        canvas.Canvas.save(self)
+
+def _require_reportlab():
+    reportlab_env = _import_reportlab()
+    if reportlab_env is None:
+        raise ImportError(
+            "ReportLab is not installed in the deployed environment. "
+            "Please add 'reportlab' to requirements.txt and redeploy."
+        )
+    return reportlab_env
+
+
+def _create_numbered_canvas(canvas_module, HexColor):
+    class NumberedCanvas(canvas_module.Canvas):
+        """Custom canvas that tracks pages to draw dynamic 'Page X of Y' footers."""
+        def __init__(self, *args, **kwargs):
+            super(NumberedCanvas, self).__init__(*args, **kwargs)
+            self._saved_page_states = []
+
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_page_decorations(num_pages)
+                canvas_module.Canvas.showPage(self)
+            canvas_module.Canvas.save(self)
 
     def draw_page_decorations(self, page_count):
         self.saveState()
@@ -61,9 +98,15 @@ class NumberedCanvas(canvas.Canvas):
         self.drawRightString(558, 30, footer_text_right)
         self.restoreState()
 
+    return NumberedCanvas
 
-def draw_pie_chart(need_oxy, no_oxy) -> Drawing:
+
+def draw_pie_chart(need_oxy, no_oxy) -> object:
     """Natively draw a Pie Chart for PDF export using ReportLab Shapes."""
+    reportlab_env = _require_reportlab()
+    Drawing = reportlab_env["Drawing"]
+    Pie = reportlab_env["Pie"]
+
     d = Drawing(220, 140)
     pc = Pie()
     pc.x = 25
@@ -82,8 +125,12 @@ def draw_pie_chart(need_oxy, no_oxy) -> Drawing:
     return d
 
 
-def draw_bar_chart(low, med, high) -> Drawing:
+def draw_bar_chart(low, med, high) -> object:
     """Natively draw a Bar Chart for PDF export using ReportLab Shapes."""
+    reportlab_env = _require_reportlab()
+    Drawing = reportlab_env["Drawing"]
+    VerticalBarChart = reportlab_env["VerticalBarChart"]
+
     d = Drawing(220, 140)
     bc = VerticalBarChart()
     bc.x = 25
@@ -122,6 +169,19 @@ def generate_batch_pdf_report(
     Returns:
         bytes: Raw PDF bytes.
     """
+    reportlab_env = _require_reportlab()
+    letter = reportlab_env["letter"]
+    HexColor = reportlab_env["HexColor"]
+    SimpleDocTemplate = reportlab_env["SimpleDocTemplate"]
+    getSampleStyleSheet = reportlab_env["getSampleStyleSheet"]
+    ParagraphStyle = reportlab_env["ParagraphStyle"]
+    Paragraph = reportlab_env["Paragraph"]
+    Spacer = reportlab_env["Spacer"]
+    Table = reportlab_env["Table"]
+    TableStyle = reportlab_env["TableStyle"]
+    KeepTogether = reportlab_env["KeepTogether"]
+    HRFlowable = reportlab_env["HRFlowable"]
+
     buffer = BytesIO()
 
     # Document setup (0.75-inch margins, leave 1.0-inch at bottom for footer)
