@@ -7,52 +7,77 @@ import os
 import datetime
 from io import BytesIO
 
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
-from reportlab.lib.colors import HexColor
-from reportlab.pdfgen import canvas
-from reportlab.platypus import (
-    SimpleDocTemplate,
-    Paragraph,
-    Spacer,
-    Table,
-    TableStyle,
-    PageBreak,
-    KeepTogether,
-    HRFlowable,
-)
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-
-from utils.config import ALL_FEATURES
+from utils.config import ALL_FEATURES, logger
 
 
-class NumberedCanvas(canvas.Canvas):
-    """Custom canvas that tracks pages to draw dynamic 'Page X of Y' footers."""
-    def __init__(self, *args, **kwargs):
-        super(NumberedCanvas, self).__init__(*args, **kwargs)
-        self._saved_page_states = []
+def _import_reportlab():
+    """Lazy import ReportLab modules only when generating PDFs."""
+    try:
+        from reportlab.lib.pagesizes import letter
+        from reportlab.lib.units import inch
+        from reportlab.lib.colors import HexColor
+        from reportlab.pdfgen import canvas
+        from reportlab.platypus import (
+            SimpleDocTemplate,
+            Paragraph,
+            Spacer,
+            Table,
+            TableStyle,
+            PageBreak,
+            KeepTogether,
+            HRFlowable,
+        )
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 
-    def showPage(self):
-        self._saved_page_states.append(dict(self.__dict__))
-        self._startPage()
+        return {
+            "letter": letter,
+            "inch": inch,
+            "HexColor": HexColor,
+            "canvas": canvas,
+            "SimpleDocTemplate": SimpleDocTemplate,
+            "Paragraph": Paragraph,
+            "Spacer": Spacer,
+            "Table": Table,
+            "TableStyle": TableStyle,
+            "PageBreak": PageBreak,
+            "KeepTogether": KeepTogether,
+            "HRFlowable": HRFlowable,
+            "getSampleStyleSheet": getSampleStyleSheet,
+            "ParagraphStyle": ParagraphStyle,
+        }
+    except Exception as e:
+        logger.error("ReportLab import failed: %s", str(e), exc_info=True)
+        return None
 
-    def save(self):
-        num_pages = len(self._saved_page_states)
-        for state in self._saved_page_states:
-            self.__dict__.update(state)
-            self.draw_page_decorations(num_pages)
-            canvas.Canvas.showPage(self)
-        canvas.Canvas.save(self)
 
-    def draw_page_decorations(self, page_count):
-        self.saveState()
-        self.setFont("Helvetica", 8)
-        self.setFillColor(HexColor("#64748b"))
+def _create_numbered_canvas(canvas_module, HexColor):
+    class NumberedCanvas(canvas_module.Canvas):
+        """Custom canvas that tracks pages to draw dynamic 'Page X of Y' footers."""
+        def __init__(self, *args, **kwargs):
+            super(NumberedCanvas, self).__init__(*args, **kwargs)
+            self._saved_page_states = []
 
-        # Footer separator line
-        self.setStrokeColor(HexColor("#e2e8f0"))
-        self.setLineWidth(0.5)
-        self.line(54, 45, 558, 45)  # Margins: 0.75in (54pt) from left/right
+        def showPage(self):
+            self._saved_page_states.append(dict(self.__dict__))
+            self._startPage()
+
+        def save(self):
+            num_pages = len(self._saved_page_states)
+            for state in self._saved_page_states:
+                self.__dict__.update(state)
+                self.draw_page_decorations(num_pages)
+                canvas_module.Canvas.showPage(self)
+            canvas_module.Canvas.save(self)
+
+        def draw_page_decorations(self, page_count):
+            self.saveState()
+            self.setFont("Helvetica", 8)
+            self.setFillColor(HexColor("#64748b"))
+
+            # Footer separator line
+            self.setStrokeColor(HexColor("#e2e8f0"))
+            self.setLineWidth(0.5)
+            self.line(54, 45, 558, 45)  # Margins: 0.75in (54pt) from left/right
 
         # Footer text as requested
         footer_text_left = "Dihasilkan oleh: OxyPredict Clinical Decision Support System"
@@ -102,6 +127,30 @@ def generate_pdf_report(
     Returns:
         bytes: Raw PDF bytes.
     """
+    reportlab_env = _import_reportlab()
+    if reportlab_env is None:
+        raise ImportError(
+            "ReportLab is not installed in the deployed environment. "
+            "Please ensure 'reportlab' is available in requirements.txt."
+        )
+
+    letter = reportlab_env["letter"]
+    inch = reportlab_env["inch"]
+    HexColor = reportlab_env["HexColor"]
+    canvas = reportlab_env["canvas"]
+    SimpleDocTemplate = reportlab_env["SimpleDocTemplate"]
+    Paragraph = reportlab_env["Paragraph"]
+    Spacer = reportlab_env["Spacer"]
+    Table = reportlab_env["Table"]
+    TableStyle = reportlab_env["TableStyle"]
+    PageBreak = reportlab_env["PageBreak"]
+    KeepTogether = reportlab_env["KeepTogether"]
+    HRFlowable = reportlab_env["HRFlowable"]
+    getSampleStyleSheet = reportlab_env["getSampleStyleSheet"]
+    ParagraphStyle = reportlab_env["ParagraphStyle"]
+
+    NumberedCanvas = _create_numbered_canvas(canvas, HexColor)
+
     buffer = BytesIO()
 
     # Document setup (0.75-inch margins, leave 1.0-inch at bottom for footer)
