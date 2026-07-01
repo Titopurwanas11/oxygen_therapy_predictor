@@ -389,20 +389,17 @@ if predict_clicked or st.session_state.get("single_predicted", False):
             )
 
         update_spinner(10)
-        time.sleep(0.18)
 
         try:
             from utils.prediction import ModelLoadError, predict_single
 
             update_spinner(25)
-            time.sleep(0.14)
 
             label, prob_yes = predict_single(patient_data)
             track_single_prediction()
             prob_yes_pct = prob_yes * 100
 
             update_spinner(45)
-            time.sleep(0.14)
 
             # Confidence Interpretation calculation
             if label == "Yes":
@@ -444,7 +441,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 risk_border = "#A7F3D0"
 
             update_spinner(65)
-            time.sleep(0.16)
 
             try:
                 shap_result = compute_shap_for_patient(patient_data)
@@ -476,7 +472,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 narrative_text = "Clinical summary not available due to SHAP computation error."
 
             update_spinner(85)
-            time.sleep(0.14)
 
             # Generate Clinical Recommendation
             rec_dict = generate_recommendation(
@@ -509,7 +504,6 @@ if predict_clicked or st.session_state.get("single_predicted", False):
                 pdf_report_bytes = None
 
             update_spinner(100)
-            time.sleep(0.25)
             progress_view.empty()
 
             # Store in session state

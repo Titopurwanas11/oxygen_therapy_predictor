@@ -258,19 +258,16 @@ if uploaded_file is not None:
                     )
 
                 update_spinner(15)
-                time.sleep(0.16)
 
                 try:
                     from utils.prediction import ModelLoadError
 
                     update_spinner(35)
-                    time.sleep(0.14)
 
                     result_df = run_batch_prediction(df_raw)
                     track_batch_prediction()
 
                     update_spinner(60)
-                    time.sleep(0.16)
 
                     try:
                         from utils.monitoring import record_predictions_from_df
@@ -279,14 +276,12 @@ if uploaded_file is not None:
                         pass
 
                     update_spinner(80)
-                    time.sleep(0.14)
 
                     # Save in session state
                     st.session_state.batch_results = result_df
                     st.session_state.batch_predicted = True
 
                     update_spinner(100)
-                    time.sleep(0.2)
                     progress_view.empty()
 
                     from utils.config import show_success_card

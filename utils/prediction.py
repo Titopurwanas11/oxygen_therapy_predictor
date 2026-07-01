@@ -3,12 +3,22 @@ Prediction utility functions for the Oxygen Therapy Predictor.
 Handles model loading, single prediction, and batch prediction.
 """
 
-import joblib
+import importlib
+import pickle
 import pandas as pd
 import streamlit as st
 import numpy as np
 
-from utils.config import MODEL_PATH, ALL_FEATURES
+from utils.config import MODEL_PATH, ALL_FEATURES, logger
+
+# Try to import joblib; if unavailable, fall back to pickle with a warning.
+# This prevents the app from failing immediately on environments where
+# `joblib` wasn't installed during deployment and gives a clearer log.
+try:
+    import joblib
+except Exception:
+    joblib = None
+    logger.warning("joblib not available; falling back to pickle for model loading. Ensure 'joblib' is in requirements.txt and deployed environment.")
 
 
 class ModelLoadError(Exception):
@@ -18,10 +28,19 @@ class ModelLoadError(Exception):
 
 @st.cache_resource
 def load_model():
-    """Load the trained Random Forest pipeline model."""
+    """Load the trained Random Forest pipeline model.
+
+    Uses `joblib` when available (preferred). If `joblib` is not installed
+    in the runtime, falls back to Python's `pickle` to attempt loading the
+    same object. Any failure is logged and re-raised as `ModelLoadError`.
+    """
     try:
-        import joblib
-        model = joblib.load(MODEL_PATH)
+        if joblib is not None:
+            model = joblib.load(MODEL_PATH)
+        else:
+            # Fallback: load using pickle
+            with open(MODEL_PATH, "rb") as f:
+                model = pickle.load(f)
         return model
     except Exception as e:
         from utils.config import logger
